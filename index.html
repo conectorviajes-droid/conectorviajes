@@ -1,0 +1,1229 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Planeá tu viaje en un solo lugar: vuelos, alquiler de autos, traslados, excursiones, eSIM y guías para más de 130 destinos en todo el mundo.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Conector">
+<meta property="og:title" content="Conector · Tu viaje por todo el mundo, en un solo lugar">
+<meta property="og:description" content="Vuelos, autos, excursiones, traslados y guías para más de 130 destinos. Asesoramiento gratis por WhatsApp.">
+<meta property="og:url" content="https://conectorviajes.com/">
+<meta property="og:image" content="https://conectorviajes.com/compartir.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#FFFFFF">
+<link rel="canonical" href="https://conectorviajes.com/">
+<link rel="apple-touch-icon" href="icono.png">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<style>html{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+<title>Conector Viajes · Vuelos, autos y excursiones en 130 destinos</title>
+<script>
+/* Idioma, moneda y ciudad de salida según dónde está la persona (se puede cambiar tocando el botón de arriba) */
+(function(){
+  var TZ = {"America/Argentina":"AR","America/Buenos_Aires":"AR","America/Cordoba":"AR","America/Mendoza":"AR","America/Sao_Paulo":"BR","America/Bahia":"BR","America/Fortaleza":"BR","America/Recife":"BR","America/Manaus":"BR","America/Belem":"BR","America/Mexico_City":"MX","America/Cancun":"MX","America/Monterrey":"MX","America/Tijuana":"MX","America/Merida":"MX","America/Chihuahua":"MX","America/Santiago":"CL","America/Bogota":"CO","America/Lima":"PE","America/Montevideo":"UY","America/Asuncion":"PY","America/La_Paz":"BO","America/Guayaquil":"EC","America/Caracas":"VE","America/Panama":"PA","America/Costa_Rica":"CR","America/Santo_Domingo":"DO","America/Toronto":"CA","America/Vancouver":"CA","Europe/London":"GB","Europe/Madrid":"ES","Europe/Paris":"FR","Europe/Rome":"IT","Europe/Berlin":"DE","Europe/Lisbon":"PT"};
+  var MONEDA = {AR:"ARS",BR:"BRL",MX:"MXN",CL:"CLP",CO:"COP",PE:"PEN",UY:"UYU",GB:"GBP",CA:"CAD",ES:"EUR",FR:"EUR",IT:"EUR",DE:"EUR",PT:"EUR",NL:"EUR",BE:"EUR",AT:"EUR",IE:"EUR"};
+  var SALIDA = {AR:"BUE",BR:"SAO",MX:"MEX",CL:"SCL",CO:"BOG",PE:"LIM",UY:"MVD",PY:"ASU",BO:"VVI",EC:"UIO",VE:"CCS",PA:"PTY",CR:"SJO",DO:"SDQ",US:"MIA",CA:"YTO",GB:"LON",ES:"MAD",FR:"PAR",IT:"ROM",DE:"BER",PT:"LIS"};
+  var IDIOMAS = ["es","en","pt","fr","it","de"];
+  var p = {}; try { p = JSON.parse(localStorage.getItem("conector-pref")) || {}; } catch(e){}
+  var nav = ((navigator.languages && navigator.languages[0]) || navigator.language || "es").toLowerCase();
+  var tz = ""; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch(e){}
+  var pais = TZ[tz] || TZ[tz.split("/").slice(0,2).join("/")] || (nav.split("-")[1] || "").toUpperCase() || "AR";
+  if (/^America\/(New_York|Chicago|Denver|Los_Angeles|Phoenix|Detroit)/.test(tz)) pais = "US";
+  var lang = nav.slice(0,2); if (IDIOMAS.indexOf(lang) < 0) lang = "en";
+  if (MONEDA[pais] && ["AR","MX","CL","CO","PE","UY","PY","BO","EC","VE","PA","CR","DO","ES"].indexOf(pais) >= 0 && lang !== "es" && nav.slice(0,2) !== "en") lang = "es";
+  window.PREF = {
+    lang: IDIOMAS.indexOf(p.lang) >= 0 ? p.lang : lang,
+    cur: p.cur || MONEDA[pais] || (/^Europe\//.test(tz) ? "EUR" : "USD"),
+    desde: p.desde || SALIDA[pais] || "BUE",
+    pais: pais
+  };
+  document.documentElement.lang = window.PREF.lang;
+  /* Buscador de vuelos (White Label): idioma y moneda de la persona */
+  var anio = ";path=/;max-age=31536000";
+  var dom = /\./.test(location.hostname) ? ";domain=." + location.hostname.replace(/^www\./,"") : "";
+  ["tpwl_locale","tpwl_currency"].forEach(function(k){ document.cookie = k + "=;path=/;max-age=0"; });
+  document.cookie = "tpwl_locale=" + window.PREF.lang + anio + dom;
+  document.cookie = "tpwl_currency=" + window.PREF.cur + anio + dom;
+  function guardar(k, v){
+    try { if (v && typeof v === "object") v = v.code || v.value || v.currency || v.locale; if (!v) return;
+      v = String(v); window.PREF[k] = k === "cur" ? v.toUpperCase() : v.toLowerCase().slice(0,2);
+      localStorage.setItem("conector-pref", JSON.stringify({lang:window.PREF.lang, cur:window.PREF.cur, desde:window.PREF.desde})); } catch(e){}
+  }
+  window.tpwlCurrencyChange = function(v){ guardar("cur", v); };
+  window.tpwlLocaleChange = function(v){ guardar("lang", v); };
+  var cfg;
+  try {
+    Object.defineProperty(window, "TPWL_BACKEND_CONFIGURATION", { configurable: true,
+      get: function(){ return cfg; },
+      set: function(v){
+        try {
+          var L = window.PREF.lang.toUpperCase(), C = window.PREF.cur;
+          if (v.availableLanguages && v.availableLanguages.indexOf(L) < 0) v.availableLanguages.push(L);
+          v.defaultLanguage = L;
+          if (v.availableCurrencies && v.availableCurrencies.indexOf(C) < 0) v.availableCurrencies.push(C);
+          v.defaultCurrency = C;
+          if (v.flightParams) v.flightParams.origin = window.PREF.desde;
+        } catch(e){}
+        cfg = v;
+      }});
+  } catch(e){}
+  /* Traducción automática del texto de la página */
+  if (window.PREF.lang !== "es") {
+    document.cookie = "googtrans=/es/" + window.PREF.lang + ";path=/";
+    window.gtInit = function(){ try { new google.translate.TranslateElement({pageLanguage:"es", autoDisplay:false}, "gt-el"); } catch(e){} };
+    document.addEventListener("DOMContentLoaded", function(){
+      var d = document.createElement("div"); d.id = "gt-el"; d.hidden = true; document.body.appendChild(d);
+      var s = document.createElement("script"); s.src = "https://translate.google.com/translate_a/element.js?cb=gtInit"; document.body.appendChild(s);
+    });
+  } else {
+    document.cookie = "googtrans=;path=/;max-age=0";
+    document.cookie = "googtrans=;path=/;domain=." + location.hostname.replace(/^www\./,"") + ";max-age=0";
+  }
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: tarjeta de embarque como motivo — hero con paisaje ilustrado, destinos como postales con código IATA, guías por barrio y contacto por WhatsApp */
+:root{
+  --bg:#FFFFFF; --soft:#F5F7F8; --surface:#FFFFFF; --ink:#14232B; --muted:#5E6E76; --line:#E6EBEE;
+  --accent:#0E8C86; --accent-ink:#FFFFFF; --sun:#FF7A1A; --sun-soft:#FFF1E6;
+  --sky1:#BFE6E4; --sky2:#FBE3C4; --sea:#1C8C93; --sea2:#0F6870; --hill:#2F6B5E; --hill2:#4C8C76; --sand:#F1D9A7;
+  --wa:#1FA855; --wa-ink:#FFFFFF;
+  --shadow:0 2px 12px rgba(20,35,43,.07); --shadow-lg:0 14px 40px -12px rgba(20,35,43,.22);
+  --font-display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --font-body:"Inter", system-ui, -apple-system, sans-serif;
+  --font-mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme:light;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1120px;margin:0 auto}
+h1,h2,h3{font-family:var(--font-display);text-wrap:balance;margin:0;letter-spacing:-.01em}
+a{color:inherit}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.label{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600}
+
+/* Header */
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:20px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:800;font-size:22px;text-decoration:none}
+.nav{display:flex;gap:22px;font-size:14px;color:var(--muted);align-items:center}
+.nav a{text-decoration:none}.nav a:hover{color:var(--ink)}
+.nav .wa-mini{display:flex;align-items:center;gap:6px;color:var(--wa);font-weight:600}
+
+/* Hero */
+.hero{padding-block:16px 8px;display:grid;grid-template-columns:1.05fr .95fr;gap:32px;align-items:center}
+.badge{display:inline-block;font-size:12.5px;font-weight:600;color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);border-radius:999px;padding:5px 12px;margin-bottom:16px}
+.hero h1 em{background:linear-gradient(90deg,var(--accent),var(--sun));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero h1{font-size:clamp(34px,5.6vw,62px);font-weight:800;line-height:1.02}
+.hero h1 em{font-style:normal}
+.hero p.lead{font-size:17px;color:var(--muted);max-width:46ch;margin:16px 0 0}
+.trust{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:20px;font-size:13.5px;color:var(--muted)}
+.trust span{display:flex;align-items:center;gap:7px}
+.trust svg{flex:none;color:var(--accent)}
+.scene{border-radius:22px;overflow:hidden;aspect-ratio:5/4;max-width:100%;position:relative;border:1px solid var(--line)}
+.scene img{display:block;width:100%;height:100%;object-fit:cover}
+.plane{offset-path:path("M 30 210 C 150 60, 330 40, 470 120");animation:fly 9s linear infinite}
+@keyframes fly{from{offset-distance:0%}to{offset-distance:100%}}
+.wave{animation:drift 7s ease-in-out infinite alternate}
+@keyframes drift{from{transform:translateX(0)}to{transform:translateX(-18px)}}
+.scene .ticket{position:absolute;left:16px;bottom:16px;background:var(--surface);border-radius:12px;padding:10px 14px;display:flex;gap:14px;align-items:center;box-shadow:0 10px 30px -14px rgba(0,0,0,.45);font-size:12px}
+.ticket b{font-family:var(--font-mono);font-size:20px;color:var(--accent)}
+.ticket .arrow{color:var(--muted)}
+
+/* Boarding-pass search */
+.pass{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:18px;display:grid;grid-template-columns:1fr auto;overflow:hidden;box-shadow:0 18px 40px -28px rgba(14,42,51,.45)}
+.pass form{display:grid;grid-template-columns:2fr 1fr 1fr 1fr}
+.field{padding:16px 18px;border-right:1px dashed var(--line);display:grid;gap:4px;min-width:0}
+.field input,.field select{border:0;background:transparent;padding:0;font-size:16px;font-weight:600;width:100%;outline:none;min-width:0}
+.field input::placeholder{color:var(--muted);font-weight:500}
+.field-error{grid-column:1/-1;color:#C2412D;font-size:13px;padding:8px 18px 0}
+.stub{background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;padding:12px 22px;position:relative;min-width:150px}
+.stub::before{content:"";position:absolute;left:-1px;top:0;bottom:0;border-left:2px dashed var(--surface);opacity:.6}
+.stub button{all:unset;cursor:pointer;font-family:var(--font-display);font-weight:700;font-size:18px;text-align:center;line-height:1.1}
+.stub small{display:block;font-family:var(--font-mono);font-size:11px;font-weight:500;opacity:.8;margin-top:4px}
+.stub:hover{filter:brightness(1.07)}
+
+/* Menú de destinos */
+.pass{position:relative;overflow:visible}
+.pass > form, .pass > .stub{border-radius:0}
+.pass > .stub{border-top-right-radius:18px;border-bottom-right-radius:18px}
+.dest-menu{position:absolute;left:0;top:calc(100% + 8px);z-index:30;width:min(720px,100%);max-height:min(70vh,560px);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:12px;box-shadow:0 24px 60px -20px rgba(0,0,0,.5)}
+.dm-reg{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600;margin:12px 6px 6px}
+.dm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.dm-item{all:unset;cursor:pointer;display:flex;align-items:center;gap:10px;padding:6px;border-radius:12px;min-width:0}
+.dm-item:hover,.dm-item:focus-visible{background:var(--bg)}
+.dm-item img{width:52px;height:52px;border-radius:10px;object-fit:cover;flex:none;background:var(--line)}
+.dm-item b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dm-item small{color:var(--muted);font-size:12px}
+.dm-item span{min-width:0}
+.dm-any{width:100%;box-sizing:border-box;background:var(--sun-soft)}
+.dm-ico{width:52px;height:52px;border-radius:10px;display:grid;place-items:center;background:var(--sun);color:#fff;font-size:22px;flex:none}
+@media (max-width:600px){.dm-grid{grid-template-columns:repeat(2,1fr)}}
+.field input[readonly]{cursor:pointer}
+/* Calendario */
+.flatpickr-calendar.cx-cal{border-radius:16px;box-shadow:0 24px 60px -20px rgba(0,0,0,.5);font-family:var(--font-body)}
+.cx-cal .flatpickr-day.selected,.cx-cal .flatpickr-day.startRange,.cx-cal .flatpickr-day.endRange{background:#0B7A75;border-color:#0B7A75}
+.cx-cal .flatpickr-day.inRange{background:#D8EEEC;border-color:#D8EEEC;box-shadow:-5px 0 0 #D8EEEC,5px 0 0 #D8EEEC}
+/* Sin códigos de aeropuerto (CUN, EZE…) */
+.art .iata,.scene .ticket,.stub small,.pill .c{display:none!important}
+/* Volver */
+.volver{all:unset;cursor:pointer;font-weight:700;font-size:15px;color:var(--accent);padding:8px 0;margin-bottom:10px;display:inline-block}
+.volver-flot{all:unset;cursor:pointer;position:fixed;left:calc(16px + env(safe-area-inset-left,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:25;background:var(--ink);color:var(--bg);font-weight:700;font-size:15px;padding:12px 18px;border-radius:999px;box-shadow:0 12px 30px -10px rgba(0,0,0,.5)}
+.volver-flot:hover{background:var(--accent);color:var(--accent-ink)}
+/* Opciones para tocar */
+.dest-chips{display:flex;gap:8px;overflow-x:auto;padding:8px 2px 10px;scrollbar-width:thin}
+.dchip{all:unset;cursor:pointer;flex:none;display:flex;align-items:center;gap:8px;padding:5px 12px 5px 5px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:13.5px;font-weight:600}
+.dchip img,.dchip-any{width:32px;height:32px;border-radius:50%;object-fit:cover;flex:none}
+.dchip-any{display:grid;place-items:center;background:var(--sun);color:#fff}
+.dchip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.svc-block{display:grid;gap:12px;min-width:0}
+.opciones{display:flex;flex-wrap:wrap;gap:8px}
+.opcion{all:unset;cursor:pointer;font-size:13.5px;font-weight:600;padding:8px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg)}
+.opcion[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.opcion:focus-visible,.dchip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* Menú de destinos en celular: panel a pantalla completa */
+.dm-head{display:none}
+.dm-fondo{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:40}
+#destino{cursor:pointer;caret-color:transparent}
+@media (max-width:760px){
+  .dest-menu{position:fixed;left:0;right:0;bottom:0;top:auto;width:auto;max-height:86vh;z-index:41;border-radius:22px 22px 0 0;
+    padding:0 max(16px,env(safe-area-inset-left,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-right,0px))}
+  .dm-head{display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--surface);padding:16px 0 10px;z-index:1;font-family:var(--font-display);font-size:20px}
+  .dm-close{all:unset;cursor:pointer;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--bg);font-size:16px}
+  .dm-grid{grid-template-columns:repeat(2,1fr)}
+  .dm-item b{white-space:normal;line-height:1.2}
+  body.dm-abierto{overflow:hidden}
+}
+/* Estilo claro y limpio (fondo blanco) */
+.tag,.trip,.step,details,.svc-panel,.dchip,.dest-menu{border-color:var(--line);box-shadow:var(--shadow)}
+.tag{border:none;border-radius:18px}
+.tag:hover{box-shadow:var(--shadow-lg);transform:translateY(-4px)}
+.tag-body{padding:14px 16px 16px}
+.pass{box-shadow:var(--shadow-lg);border-color:transparent;border-radius:20px}
+.stub{background:var(--sun);color:#fff}
+.stub button{font-size:19px}
+.scene{border:none;box-shadow:var(--shadow-lg);border-radius:24px}
+#servicios,#como{background:var(--soft);margin-inline:calc(-1 * max(16px, env(safe-area-inset-left,0px)));padding-inline:max(16px, env(safe-area-inset-left,0px));border-radius:28px}
+.svc-panel{background:#fff}
+.regions .pill{background:#fff;box-shadow:var(--shadow);border-color:var(--line)}
+.regions .pill[aria-selected="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.regions .pill[aria-selected="true"] .n{color:#fff}
+.btn-wa{box-shadow:var(--shadow)}
+.band{background:linear-gradient(120deg,var(--accent),#14A79F)}
+.badge{background:var(--sun-soft);border-color:#FFD7B8;color:#C2560C}
+.hero h1{color:var(--ink)}
+header{border-bottom:1px solid var(--line);margin-bottom:8px}
+.art .kind{background:#fff;color:var(--ink);box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.step .ico{background:var(--sun-soft);color:var(--sun)}
+.dm-item:hover{background:var(--soft)}
+.opcion{background:#fff;box-shadow:var(--shadow)}
+.widget-box{box-shadow:inset 0 0 0 1px var(--line)}
+/* Resultados como pantalla propia */
+#resultados.pantalla{position:fixed;inset:0;z-index:50;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:calc(env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(90px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+#resultados.pantalla > *{max-width:1120px;margin-inline:auto}
+#resultados.pantalla .volver{position:sticky;top:0;z-index:3;display:block;background:var(--bg);padding:14px 0;margin-bottom:6px;border-bottom:1px solid var(--line);width:100%}
+body.con-pantalla{overflow:hidden}
+.volver-flot{z-index:60}
+/* Buscador de vuelos (White Label) */
+.wl-box{background:#fff;border-radius:20px;box-shadow:var(--shadow-lg);padding:16px;min-height:140px}
+.vuelo-fechas{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.btn-vuelo{background:var(--sun);color:#fff;font-size:15px;padding:12px 18px}
+.btn-vuelo:hover{background:#e86a0e;color:#fff}
+/* Sections */
+section{padding-block:40px;scroll-margin-top:16px}
+.sec-head{display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.sec-head h2{font-size:clamp(24px,3.4vw,34px);font-weight:700}
+.sec-head p{margin:0;color:var(--muted);max-width:46ch}
+
+/* Destination postcards */
+.tags{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.tag{all:unset;cursor:pointer;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:grid;grid-template-rows:auto 1fr;transition:transform .2s, box-shadow .2s, border-color .2s}
+.tag:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 16px 30px -20px rgba(14,42,51,.5)}
+.tag:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.art{aspect-ratio:16/10;position:relative;max-width:100%}
+.art svg,.art img{display:block;width:100%;height:100%;object-fit:cover;background:var(--line)}
+.art::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(0,0,0,.55));pointer-events:none}
+.art .iata,.art .kind{z-index:1}
+.tag:hover .art img{transform:scale(1.05)}
+.art{overflow:hidden}.art img{transition:transform .5s}
+.art .iata{position:absolute;left:12px;bottom:8px;font-family:var(--font-mono);font-weight:700;font-size:30px;line-height:1;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.35);letter-spacing:.03em}
+.art .kind{position:absolute;right:10px;top:10px;font-size:11px;font-weight:600;background:rgba(255,255,255,.9);color:#0E2A33;border-radius:999px;padding:3px 9px}
+.tag-body{padding:12px 14px 14px;display:grid;gap:8px;align-content:start;min-width:0}
+.tag .city{font-family:var(--font-display);font-weight:700;font-size:18px}
+.tag .meta{display:grid;gap:2px;font-size:13px;color:var(--muted);border-top:1px dashed var(--line);padding-top:8px}
+.tag .meta b{color:var(--ink);font-weight:600}
+
+/* Trip panel (resultado de búsqueda y guías) */
+.trip{background:var(--surface);border:1px solid var(--line);border-radius:20px;overflow:visible;display:grid;grid-template-columns:.9fr 1.1fr}
+.trip{align-items:start}
+.trip .art{aspect-ratio:4/5;position:sticky;top:16px}
+.trip-body{padding:24px;display:grid;gap:14px;align-content:start;min-width:0}
+.trip-body h2{font-size:clamp(24px,3vw,32px)}
+.facts{display:flex;flex-wrap:wrap;gap:8px}
+.fact{font-size:13px;border:1px solid var(--line);border-radius:999px;padding:4px 11px;color:var(--muted)}
+.fact b{color:var(--ink);font-weight:600}
+.zones{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+.zones li{font-size:14px;border-top:1px dashed var(--line);padding-top:10px}
+.zones li b{display:block;font-family:var(--font-display);font-size:15px}
+.zones li span{color:var(--muted)}
+.soon{background:var(--sun-soft);border:1px solid var(--sun);border-radius:12px;padding:10px 14px;font-size:14px}
+.actions{display:flex;flex-wrap:wrap;gap:10px}
+
+/* Buttons */
+.btn{all:unset;cursor:pointer;background:var(--ink);color:var(--bg);font-weight:600;font-size:14px;padding:10px 16px;border-radius:10px;text-align:center;display:inline-flex;align-items:center;gap:8px}
+.btn:hover{background:var(--accent);color:var(--accent-ink)}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn-wa{background:var(--wa);color:var(--wa-ink)}
+.btn-wa:hover{background:var(--wa);filter:brightness(1.08);color:var(--wa-ink)}
+
+/* Servicios (enlaces de socio) */
+.svc-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.svc{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;display:grid;gap:8px;align-content:start;text-decoration:none;min-width:0;transition:transform .2s,border-color .2s}
+.svc:hover{transform:translateY(-3px);border-color:var(--accent)}
+.svc-ico{width:44px;height:44px;border-radius:12px;background:var(--sun-soft);color:var(--sun);display:grid;place-items:center}
+.svc-t{font-family:var(--font-display);font-weight:700;font-size:17px}
+.svc-x{color:var(--muted);font-size:13.5px}
+.svc-m{color:var(--accent);font-weight:600;font-size:13px;margin-top:4px}
+.svc-panel{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:20px;display:grid;gap:14px;min-width:0}
+.svc-intro{margin:0;color:var(--muted)}
+.svc-city{display:grid;gap:6px;max-width:320px}
+.svc-city select{font-size:15px;font-weight:600;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.widget-box{min-height:120px;border-radius:14px;overflow:visible;background:#fff;padding:8px;min-width:0;max-width:100%;position:relative;z-index:5}
+.svc-alt{margin:0;font-size:13px;color:var(--muted)}
+.svc-alt a{color:var(--accent);font-weight:600}
+#svc-tabs .pill svg{width:18px;height:18px}
+.svc-row{border-top:1px dashed var(--line);padding-top:14px;display:grid;gap:10px;min-width:0}
+.svc-chips{display:flex;flex-wrap:wrap;gap:8px}
+.svc-chip{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:6px 12px 6px 9px;color:var(--ink)}
+.svc-chip svg{width:18px;height:18px;color:var(--accent)}
+.svc-chip:hover{border-color:var(--accent);color:var(--accent)}
+@media (max-width:1000px){.svc-grid{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:600px){.svc-grid{grid-template-columns:repeat(2,1fr)}}
+@media (prefers-reduced-motion:reduce){.svc{transition:none}.svc:hover{transform:none}}
+
+/* Guides (pestañas por ciudad) */
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.pill{all:unset;cursor:pointer;font-size:13px;font-weight:600;border:1px solid var(--line);border-radius:999px;padding:6px 13px;background:var(--surface);display:flex;gap:6px;align-items:center}
+.pill .c{font-family:var(--font-mono);color:var(--accent);font-size:12px}
+.pill[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pill[aria-selected="true"] .c{color:var(--sun)}
+.pill:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.regions .pill{font-size:14px;padding:8px 15px;background:transparent}
+.regions .pill .n{font-family:var(--font-mono);font-size:11px;color:var(--muted)}
+.regions .pill[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.regions .pill[aria-selected="true"] .n{color:var(--accent-ink);opacity:.8}
+
+/* Steps */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;display:grid;gap:8px;align-content:start}
+.step .ico{width:44px;height:44px;border-radius:12px;background:var(--sun-soft);display:grid;place-items:center;color:var(--sun)}
+.step .n{font-family:var(--font-mono);font-size:12px;color:var(--accent);font-weight:700}
+.step h3{font-size:19px}
+.step p{margin:0;color:var(--muted)}
+
+/* FAQ */
+.faq{display:grid;gap:10px;max-width:780px}
+details{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px 18px}
+summary{cursor:pointer;font-family:var(--font-display);font-weight:700;font-size:17px;padding:12px 0;list-style:none;display:flex;justify-content:space-between;gap:12px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font-family:var(--font-mono);color:var(--accent);font-size:20px;line-height:1}
+details[open] summary::after{content:"–"}
+details p{margin:0 0 14px;color:var(--muted)}
+
+/* WhatsApp band */
+.band{background:var(--accent);color:var(--accent-ink);border-radius:22px;padding:32px;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
+.band h2{font-size:clamp(22px,3vw,30px);max-width:24ch}
+.band p{margin:6px 0 0;opacity:.85}
+.band .btn-wa{font-size:15px;padding:12px 20px}
+.phone{font-family:var(--font-mono);font-weight:700;user-select:all}
+
+/* Desplegable de barrios */
+.zonas-det{border-top:1px dashed var(--line);padding-top:12px}
+.zonas-det summary{font-family:var(--font-display);font-weight:700;cursor:pointer;list-style:none;display:flex;justify-content:space-between}
+.zonas-det summary::after{content:"+";color:var(--accent);font-family:var(--font-mono)}
+.zonas-det[open] summary::after{content:"–"}
+.zonas-det .zones{margin-top:10px}
+/* Floating WhatsApp */
+.wa-float{position:fixed;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:20;background:var(--wa);color:var(--wa-ink);border-radius:999px;display:flex;align-items:center;gap:8px;padding:12px 16px 12px 14px;text-decoration:none;font-weight:700;font-size:14px;box-shadow:0 12px 30px -10px rgba(0,0,0,.45)}
+.wa-float:hover{filter:brightness(1.08)}
+
+footer{border-top:1px solid var(--line);margin-top:40px;padding-block:28px 90px;color:var(--muted);font-size:13px;display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:24px}
+footer h4{margin:0 0 8px;color:var(--ink);font-family:var(--font-display);font-size:14px}
+footer p{margin:0 0 8px;max-width:52ch}
+footer a{text-decoration:none}footer a:hover{color:var(--ink)}
+footer .links{display:grid;gap:6px;align-content:start}
+
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr}
+  .pass{grid-template-columns:1fr}
+  .pass form{grid-template-columns:1fr 1fr}
+  .field{border-bottom:1px dashed var(--line)}
+  .field.dest{grid-column:1/-1}
+  .stub::before{display:none}
+  .tags{grid-template-columns:repeat(2,1fr)}
+  .steps{grid-template-columns:1fr}
+  .trip{grid-template-columns:1fr}
+  .trip .art{aspect-ratio:16/7;position:relative;top:auto}
+  .nav a:not(.wa-mini){display:none}
+  footer{grid-template-columns:1fr}
+}
+@media (max-width:600px){
+  .tags{gap:10px}
+  .art .iata{font-size:24px}
+  .band{padding:24px}
+  .wa-float span{display:none}
+  .wa-float{padding:14px}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .plane,.wave{animation:none}
+  .tag{transition:none}.tag:hover{transform:none}
+}
+/* Ofertas reales */
+.of-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.of-card{all:unset;cursor:pointer;display:block;border-radius:18px;overflow:hidden;background:var(--bg);border:1px solid var(--line);box-shadow:0 6px 20px rgba(10,26,31,.06);transition:transform .15s}
+.of-card:hover{transform:translateY(-3px)}
+.of-card .im{height:140px;background:linear-gradient(135deg,var(--accent),var(--sun)) center/cover;position:relative}
+.of-card .pr{position:absolute;right:10px;bottom:10px;background:#fff;color:var(--ink);font:800 20px 'Bricolage Grotesque',sans-serif;padding:6px 12px;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.of-card .pr small{font:600 11px Inter,sans-serif;color:var(--muted);display:block;text-align:right}
+.of-card .tx{padding:12px 14px 14px}
+.of-card b{display:block;font-size:17px}
+.of-card span{display:block;color:var(--muted);font-size:13px;margin-top:3px}
+.of-nota{color:var(--muted);font-size:13px;margin-top:12px}
+#oferta.pantalla{position:fixed;inset:0;z-index:55;background:var(--bg);overflow-y:auto}
+#oferta.pantalla > *{max-width:720px;margin-inline:auto}
+#oferta .volver{position:sticky;top:0;z-index:2;display:block;background:var(--bg);padding:14px 16px;border-bottom:1px solid var(--line);width:100%;box-sizing:border-box}
+.of-big{padding:0 16px 40px}
+.of-big .im{height:300px;border-radius:22px;background:linear-gradient(135deg,var(--accent),var(--sun)) center/cover;margin:16px 0 18px}
+.of-big h2{font-size:32px;margin:0 0 6px}
+.of-big .precio{font:800 44px 'Bricolage Grotesque',sans-serif;color:var(--sun);margin:10px 0 4px}
+.of-big ul{list-style:none;padding:0;margin:14px 0 22px;color:var(--ink)}
+.of-big li{padding:6px 0;border-bottom:1px solid var(--line)}
+.of-big .comprar{display:block;text-align:center;background:var(--sun);color:#fff;font-weight:700;font-size:18px;padding:16px;border-radius:14px;text-decoration:none}
+.of-big .chica{color:var(--muted);font-size:13px;margin-top:10px}
+/* Idioma y moneda */
+.pref-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:8px 14px;font:600 14px/1 Inter,system-ui,sans-serif;cursor:pointer;white-space:nowrap}
+.pref-btn:hover{border-color:var(--accent)}
+.pref{position:fixed;inset:0;z-index:60;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.pref-in{max-width:720px;margin-inline:auto;padding:0 16px 40px}
+.pref h3{margin:22px 0 10px;font-size:18px}
+.pref-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.pref-op{display:flex;align-items:center;gap:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:14px;padding:12px;font:500 15px/1.2 Inter,system-ui,sans-serif;cursor:pointer;text-align:left}
+.pref-op[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--bg));font-weight:700}
+.pref-op .f{font-size:22px}
+.pref-ok{margin-top:24px;width:100%}
+.pref-nota{color:var(--muted);font-size:14px;margin-top:14px}
+body{top:0!important}.goog-te-banner-frame,.skiptranslate>iframe,#goog-gt-tt,.goog-te-balloon-frame{display:none!important}font[style]{background:none!important;box-shadow:none!important}
+</style>
+<script nowprocket data-noptimize="1" data-cfasync="false" data-wpfc-render="false" seraph-accel-crit="1" data-no-defer="1" data-cmp-ab="2">
+(function () {
+var script = document.createElement("script");
+script.async = 1;
+script.setAttribute("data-cmp-ab","2");
+script.src = 'https://emrldtp.com/NjA0Mzg3.js?t=604387';
+document.head.appendChild(script);
+})();
+</script>
+<script nowprocket data-noptimize="1" data-cfasync="false" data-wpfc-render="false" seraph-accel-crit="1" data-no-defer="1">
+  (function () {
+        var script = document.createElement("script");
+        script.async = 1;
+        script.type = "module";
+        script.src = "https://tpemd.com/wl_web/main.js?wl_id=24913";
+        document.head.appendChild(script);
+      })();
+</script></head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-wa" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.4.1-.7.3-.2.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.800 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+
+<div class="wrap">
+  <header>
+    <a class="brand notranslate" translate="no" href="#" data-volver>
+      <svg width="40" height="24" viewBox="0 0 40 24" aria-hidden="true"><defs><linearGradient id="lg-h" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--sun)"/></linearGradient></defs><path d="M20 12C16.5 6.5 13 4.5 9.5 4.5A7.5 7.5 0 0 0 9.5 19.5C13 19.5 16.5 17.5 20 12C23.5 6.5 27 4.5 30.5 4.5A7.5 7.5 0 0 1 30.5 19.5C27 19.5 23.5 17.5 20 12Z" fill="none" stroke="url(#lg-h)" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Conector
+    </a>
+    <nav class="nav"><a href="#vuelos">Vuelos</a><a href="#destinos">Destinos</a><a href="#servicios">Autos y más</a><a href="#guias">Guías</a><a href="#como">Cómo funciona</a><a href="#preguntas">Preguntas</a></nav>
+    <button type="button" class="pref-btn notranslate" id="pref-btn" translate="no">🌐 ES · ARS</button>
+  </header>
+
+  <div class="hero">
+    <div>
+      <span class="badge">✦ +130 destinos en 6 continentes · vuelos · autos · excursiones</span>
+      <h1>Tu viaje por <em>todo el mundo</em>, en un solo lugar.</h1>
+      <p class="lead">Poné tus fechas y te mostramos destinos ideales, vuelos y excursiones. ¿Ya sabés a dónde vas? Elegilo y listo.</p>
+      <div class="trust">
+        <span><svg width="16" height="16" aria-hidden="true"><use href="#i-check"/></svg>Asesoramiento sin costo</span>
+        <span><svg width="16" height="16" aria-hidden="true"><use href="#i-check"/></svg>Pagás en la plataforma oficial</span>
+        <span><svg width="16" height="16" aria-hidden="true"><use href="#i-check"/></svg>Precios reales, sin recargo</span>
+      </div>
+    </div>
+    <div class="scene" aria-hidden="true">
+      <img src="https://images.unsplash.com/photo-1729530687669-9cc04a5e6f63?auto=format&fit=crop&w=1200&q=80" alt="" fetchpriority="high">
+      <div class="ticket"><div><div class="label">Desde</div><b>EZE</b></div><span class="arrow">→</span><div><div class="label">Hacia</div><b id="ticket-to">CUN</b></div></div>
+    </div>
+  </div>
+
+  <div class="pass">
+    <form id="buscador" novalidate>
+      <label class="field dest"><span class="label">Destino</span>
+        <input id="destino" placeholder="Elegí un destino" autocomplete="off" readonly inputmode="none">
+      </label>
+      <label class="field"><span class="label">Entrada</span><input id="f-entrada" readonly placeholder="Elegí fechas"></label>
+      <label class="field"><span class="label">Salida</span><input id="f-salida" readonly placeholder="—"></label>
+      <input type="hidden" id="entrada"><input type="hidden" id="salida">
+      <label class="field"><span class="label">Huéspedes</span>
+        <select id="huespedes"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option value="7">7 o más</option></select>
+      </label>
+      <div class="field-error" id="form-error" hidden></div>
+    </form>
+    <div class="stub"><button type="submit" form="buscador">Planear viaje<small id="stub-code">EZE → ???</small></button></div>
+  </div>
+
+  <section id="ofertas" hidden>
+    <div class="sec-head"><h2>🔥 Ofertas reales de hoy</h2><p>Vuelos ida y vuelta desde <span class="desde-txt">Buenos Aires</span>, encontrados en las últimas horas. Tocá y comprá en la página oficial.</p></div>
+    <div class="of-grid" id="of-grid"></div>
+    <p class="of-nota" id="of-nota"></p>
+  </section>
+
+  <section id="oferta" class="pantalla" hidden>
+    <button type="button" class="volver" data-of-cerrar>← Volver</button>
+    <div id="of-detalle"></div>
+  </section>
+
+  <section id="vuelos">
+    <div class="sec-head"><h2>Buscá vuelos baratos</h2><p>Tocá un destino y te mostramos los vuelos desde <span class="desde-txt">Buenos Aires</span> con tus fechas.</p></div>
+    <div class="vuelo-fechas"><span class="label">Tus fechas</span> <button type="button" class="opcion" id="vuelo-fechas-btn"></button></div>
+    <div class="dest-chips" id="vuelo-dest"></div>
+    <div class="wl-box notranslate" translate="no">
+      <div id="tpwl-search"></div>
+      <div id="tpwl-tickets"></div>
+    </div>
+  </section>
+
+  <section id="resultados" hidden>
+    <button type="button" class="volver" data-volver>← Volver</button>
+    <div id="trip"></div>
+  </section>
+
+  <section id="destinos">
+    <div class="sec-head"><h2>Destinos populares</h2><p>Tocá una postal para ver los mejores barrios y consultarnos por tu fecha.</p></div>
+    <div class="pills regions" role="tablist" id="regions"></div>
+    <div class="tags" id="tags"></div>
+    <div style="text-align:center;margin-top:18px"><button type="button" class="btn" id="ver-mas" hidden>Ver más destinos</button></div>
+  </section>
+
+  <section id="servicios">
+    <div class="sec-head"><h2>Todo para tu viaje</h2><p>Buscá vuelos, autos, traslados, excursiones e internet acá mismo. Cuando elegís, pagás seguro en la plataforma oficial.</p></div>
+    <span class="label">1 · Elegí tu destino</span>
+    <div class="dest-chips" id="svc-dest"></div>
+    <span class="label" style="display:block;margin-top:18px">2 · Elegí qué necesitás</span>
+    <div class="svc-block svc-panel" id="svc-main" data-svc="vuelos"></div>
+  </section>
+
+  <section id="guias">
+    <div class="sec-head"><h2>Dónde alojarse</h2><p>Guías rápidas para elegir el barrio correcto antes de reservar.</p></div>
+    <div class="pills regions" role="tablist" id="g-regions"></div>
+    <div class="pills" role="tablist" id="pills"></div>
+    <div id="guide-panel"></div>
+  </section>
+
+  <section id="como">
+    <div class="sec-head"><h2>Cómo funciona</h2></div>
+    <div class="steps">
+      <div class="step"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M15.5 15.5L21 21" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></div><span class="n">PASO 1</span><h3>Poné tus fechas</h3><p>Con o sin destino: te mostramos ideas para esas fechas.</p></div>
+      <div class="step"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="9" cy="11" r="2" fill="currentColor"/><path d="M3 17l5-4 4 3 3-2 6 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div><span class="n">PASO 2</span><h3>Mirá opciones</h3><p>Vuelos, excursiones con fotos y precios, autos y más, todo acá.</p></div>
+      <div class="step"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.2"/></svg></div><span class="n">PASO 3</span><h3>Reservás seguro</h3><p>La reserva y el pago se hacen en la plataforma oficial, con su atención al cliente.</p></div>
+    </div>
+  </section>
+
+  <section id="preguntas">
+    <div class="sec-head"><h2>Preguntas frecuentes</h2></div>
+    <div class="faq">
+      <details><summary>¿Conector cobra algo?</summary><p>No. Buscar, leer las guías y consultarnos por WhatsApp es gratis. Cuando reservás a través de nuestros enlaces, la plataforma de reservas nos paga una comisión, y vos pagás el mismo precio que verías entrando directo.</p></details>
+      <details><summary>¿Dónde pago la reserva?</summary><p>En la plataforma oficial donde elegiste el alojamiento. Conector nunca te pide datos de tarjeta ni cobra pagos.</p></details>
+      <details><summary>¿Cómo los contacto?</summary><p>Por WhatsApp al <span class="phone">+54 9 11 5472-5898</span>. Contanos destino, fechas y cantidad de personas, y te respondemos con opciones.</p></details>
+      <details><summary>¿A quién le reclamo si hay un problema con la reserva?</summary><p>A la plataforma donde reservaste: ella tiene tu reserva, tu pago y su propio servicio de atención. Si necesitás ayuda para encontrar el contacto, escribinos.</p></details>
+    </div>
+  </section>
+
+  <div class="band">
+    <div>
+      <h2>¿Tenés dudas con tu viaje? Escribinos.</h2>
+      <p>WhatsApp <span class="phone">+54 9 11 5472-5898</span></p>
+    </div>
+    <a class="btn btn-wa" data-wa href="#"><svg width="20" height="20" aria-hidden="true"><use href="#i-wa"/></svg>Chatear por WhatsApp</a>
+  </div>
+
+  <footer>
+    <div>
+      <a class="brand" href="#" style="font-size:18px;margin-bottom:10px"><svg width="34" height="20" viewBox="0 0 40 24" aria-hidden="true"><defs><linearGradient id="lg-f" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--sun)"/></linearGradient></defs><path d="M20 12C16.5 6.5 13 4.5 9.5 4.5A7.5 7.5 0 0 0 9.5 19.5C13 19.5 16.5 17.5 20 12C23.5 6.5 27 4.5 30.5 4.5A7.5 7.5 0 0 1 30.5 19.5C27 19.5 23.5 17.5 20 12Z" fill="none" stroke="url(#lg-f)" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Conector</a>
+      <p>Conector te ayuda a planear tu viaje por Latinoamérica y el mundo: vuelos, autos, traslados, excursiones y guías de alojamiento. Cuando reservás a través de nuestros enlaces, la plataforma de reservas puede pagarnos una comisión, sin costo extra para vos.</p>
+      <p>© 2026 Conector · Fotos: Unsplash</p>
+    </div>
+    <div class="links"><h4>Explorar</h4><a href="#destinos">Destinos</a><a href="#guias">Guías</a><a href="#como">Cómo funciona</a><a href="#preguntas">Preguntas frecuentes</a><a data-wa href="#">WhatsApp: <span class="phone">+54 9 11 5472-5898</span></a></div>
+    <div><h4>Privacidad</h4><p>No pedimos datos personales ni guardamos tus búsquedas. Si nos escribís por WhatsApp, usamos tu mensaje solo para responderte. Al ir a una oferta, pasás a la plataforma de reservas, que tiene su propia política de privacidad.</p></div>
+  </footer>
+</div>
+
+
+<button type="button" class="volver-flot" data-volver hidden>← Volver</button>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/l10n/es.min.js"></script>
+<script>
+/* ===== CONFIGURACIÓN =====
+   whatsapp: número en formato internacional, sin + ni espacios.
+   linkAfiliado: cuando Travelpayouts te apruebe, pegá acá tu enlace.
+   Usá {ciudad}, {entrada}, {salida}, {huespedes} como marcadores. */
+const CONFIG = {
+  whatsapp: "5491154725898",
+  linkAfiliado: "",
+  /* Enlaces de socio generados en Travelpayouts (marker 809229) */
+  servicios: [
+    {id:"vuelos", titulo:"Vuelos", marca:"Aviasales", texto:"Compará pasajes de cientos de aerolíneas.", url:"https://aviasales.tpo.lv/f6Me3nJg"},
+    {id:"autos", titulo:"Alquiler de autos", marca:"Economybookings", texto:"Autos de las principales rentadoras, con cancelación flexible.", url:"https://economybookings.tpo.lv/3LijwF2J"},
+    {id:"excursiones", titulo:"Excursiones y entradas", marca:"Klook", texto:"Tours, atracciones y entradas sin hacer fila.", url:"https://klook.tpo.lv/0akdnTnA"},
+    {id:"traslados", titulo:"Traslados", marca:"Kiwitaxi", texto:"Del aeropuerto al hotel con precio fijo, reservado antes de viajar.", url:"https://kiwitaxi.tpo.lv/BwgFsH9c"},
+    {id:"esim", titulo:"Internet en el viaje", marca:"Airalo", texto:"Chip virtual (eSIM) con datos para más de 200 países.", url:"https://airalo.tpo.lv/jmIfvMpy"}
+  ]
+};
+/* Widgets de Travelpayouts (se muestran dentro de la página) */
+const TP = "https://tpemd.com/content?trs=604387&shmarker=809229&powered_by=true&";
+const WIDGETS = {
+  vuelos: TP + "currency=usd&show_hotels=false&locale=es&searchUrl=www.aviasales.com%2Fsearch&primary_override=%230B7A75&color_button=%230B7A75&color_icons=%230B7A75&dark=%23262626&light=%23FFFFFF&secondary=%23FFFFFF&special=%23C4C4C4&color_focused=%230B7A75&border_radius=12&plain=false&promo_id=7879&campaign_id=100",
+  autos: TP + "locale=es&border_radius=12&plain=true&show_logo=true&color_background=%23FCEBD3&color_button=%230B7A75&color_text=%23000000&color_input_text=%23000000&color_button_text=%23ffffff&promo_id=4480&campaign_id=10",
+  traslados: TP + "currency=USD&locale=es&from=&to=&country=&height=&wtype=true&transfers_limit=10&bg_color=%23f5f5f5&button_color=%230B7A75&button_font_color=%23ffffff&button_hover_color=%23095f5b&border_color=%23E8962E&input_font_color=%23373f47&input_bg_color=%23ffffff&input_label_color=%236c7c8c&icon_bg_color=%23ffffff&icon_arrow_color=%236c7c8c&icon_bg_color_mobile=%23E8962E&icon_arrow_color_mobile=%23ffffff&autocomplete_font_color=%23373f47&autocomplete_bg_color=%23ffffff&autocomplete_font_color_active=%23ffffff&autocomplete_bg_color_active=%230B7A75&loader_color=%23E8962E&empty_color=%23373f47&info_bg_color=%23fff0cc&info_icon_color=%234a4a4a&info_caption_color=%234a4a4a&class_background=%23ffffff&class_font_color=%23373f47&class_header_color=%236c7c8c&class_button_background=%230B7A75&class_button_font_color=%23ffffff&class_button_background_hover=%23095f5b&class_comment_background=%23bfc0c4&class_comment_font=%23bfc0c4&more_font_color=%230B7A75&notification_background=%23f6f1ec&notification_border_color=%23E8962E&notification_color=%23373f47&transfer_background=%23f6f7f8&transfer_background_hover=%23f6f7f8&transfer_font_color=%23373f47&campaign_id=1&promo_id=2949",
+  esim: TP + "locale=es&color_button=%230B7A75&color_focused=%230B7A75&secondary=%23FFFFFF&dark=%2311100f&light=%23FFFFFF&special=%23C4C4C4&border_radius=12&plain=false&no_labels=true&promo_id=8588&campaign_id=541",
+  tours: id => TP + `currency=USD&locale=en&city_id=${id}&category=1&amount=3&campaign_id=137&promo_id=4497`
+};
+/* Ciudades con excursiones en Klook (id de ciudad de Klook) */
+const KLOOK = {CUN:540, GIG:17954, CTG:28987, CUZ:96624, PUJ:702062, MEX:5238, IGR:124147, SCL:32376,
+  MIA:198, MCO:700841, JFK:93, MAD:10264, BCN:108, FCO:92, CDG:107, LIS:308, HND:28, BKK:4, DXB:78};
+function ajustarIdioma(src){
+  const P = window.PREF || {lang:"es", cur:"USD", desde:"BUE"};
+  if (!/promo_id=4497/.test(src)) src = src.replace(/([?&]locale=)[a-z]+/, "$1" + P.lang);
+  let cur = P.cur.toLowerCase();
+  if (/promo_id=(2949|4497)/.test(src) || /wtype=true/.test(src)) cur = ["EUR","GBP"].includes(P.cur) ? P.cur : "USD";
+  src = src.replace(/([?&]currency=)[A-Za-z]+/, "$1" + cur);
+  return src.replace(/([?&]origin=)BUE\b/, "$1" + P.desde);
+}
+function cargarWidget(contenedor, src){
+  src = ajustarIdioma(src);
+  contenedor.innerHTML = "";
+  const s = document.createElement("script");
+  s.async = true; s.charset = "utf-8"; s.src = src;
+  contenedor.appendChild(s);
+}
+const SVC_ICON = {
+  vuelos:'<path d="M2 16l20-6-20-6 4 6-4 6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M6 10h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  autos:'<path d="M4 15l2-6h12l2 6v4h-2v-2H6v2H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="8" cy="15" r="1.4" fill="currentColor"/><circle cx="16" cy="15" r="1.4" fill="currentColor"/>',
+  excursiones:'<path d="M4 7h16v4a2 2 0 0 0 0 4v4H4v-4a2 2 0 0 0 0-4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M14 7v12" stroke="currentColor" stroke-width="2" stroke-dasharray="2 2"/>',
+  traslados:'<rect x="3" y="7" width="18" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 12h18M8 7V5h8v2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="7" cy="18" r="1.5" fill="currentColor"/><circle cx="17" cy="18" r="1.5" fill="currentColor"/>',
+  esim:'<path d="M7 3h7l4 4v14H7z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><rect x="10" y="11" width="5" height="6" rx="1" fill="none" stroke="currentColor" stroke-width="1.8"/>'
+};
+const svcIcon = id => `<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">${SVC_ICON[id]}</svg>`;
+
+/* Ilustraciones por tipo de destino (SVG, sin imágenes externas) */
+const ART = {
+  playa:(a,b)=>`<svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><rect width="160" height="100" fill="${a}"/><circle cx="118" cy="34" r="16" fill="#FFD37A"/><path d="M0 62 Q40 56 80 62 T160 62 V100 H0Z" fill="${b}"/><path d="M0 74 Q40 68 80 74 T160 74 V100 H0Z" fill="#0F5F66" opacity=".6"/><path d="M0 86 Q80 78 160 88 V100 H0Z" fill="#F1D9A7"/><g transform="translate(30 88)"><path d="M0 0 Q3 -22 7 -40" stroke="#5B3A1E" stroke-width="3" fill="none"/><path d="M7 -40 q-18 -3 -26 7 q13 -8 26 -7 q-7 -15 -21 -17 q15 4 21 17 q5 -15 18 -19 q-12 8 -18 19 q15 -5 27 4 q-14 -5 -27 -4" fill="#2E7D4F"/></g></svg>`,
+  montana:(a,b)=>`<svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><rect width="160" height="100" fill="${a}"/><circle cx="36" cy="28" r="11" fill="#FFF3D6"/><path d="M0 70 L40 30 L62 52 L92 18 L130 60 L160 42 V100 H0Z" fill="${b}"/><path d="M92 18 L82 30 L88 30 L94 26 L100 31 L104 27Z M40 30 L34 37 L44 36Z" fill="#fff"/><path d="M0 76 Q80 68 160 76 V100 H0Z" fill="#2C7FA0"/><path d="M0 84 Q80 78 160 86 V100 H0Z" fill="#1E5E78"/></svg>`,
+  ciudad:(a,b)=>`<svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><rect width="160" height="100" fill="${a}"/><circle cx="126" cy="26" r="12" fill="#FFD37A"/><g fill="${b}"><rect x="8" y="52" width="18" height="48"/><rect x="28" y="38" width="16" height="62"/><rect x="46" y="58" width="14" height="42"/><rect x="62" y="28" width="20" height="72"/><rect x="84" y="46" width="16" height="54"/><rect x="102" y="56" width="22" height="44"/><rect x="126" y="40" width="16" height="60"/><rect x="144" y="60" width="16" height="40"/></g><g fill="#FFE7A8" opacity=".85"><rect x="66" y="36" width="4" height="4"/><rect x="74" y="44" width="4" height="4"/><rect x="32" y="48" width="4" height="4"/><rect x="88" y="54" width="4" height="4"/><rect x="130" y="50" width="4" height="4"/><rect x="106" y="66" width="4" height="4"/></g></svg>`,
+  colonial:(a,b)=>`<svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><rect width="160" height="100" fill="${a}"/><circle cx="30" cy="26" r="12" fill="#FFD37A"/><rect x="0" y="54" width="160" height="46" fill="${b}"/><path d="M96 54 V30 a10 10 0 0 1 20 0 V54Z" fill="${b}"/><circle cx="106" cy="20" r="3" fill="${b}"/><g fill="#0E2A33" opacity=".28"><path d="M10 100 V76 a8 8 0 0 1 16 0 V100Z"/><path d="M34 100 V76 a8 8 0 0 1 16 0 V100Z"/><path d="M58 100 V76 a8 8 0 0 1 16 0 V100Z"/><path d="M82 100 V76 a8 8 0 0 1 16 0 V100Z"/><path d="M106 100 V76 a8 8 0 0 1 16 0 V100Z"/><path d="M130 100 V76 a8 8 0 0 1 16 0 V100Z"/></g><g fill="#E25C7A"><circle cx="20" cy="62" r="3"/><circle cx="48" cy="64" r="3"/><circle cx="140" cy="62" r="3"/></g></svg>`,
+  cascada:(a,b)=>`<svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><rect width="160" height="100" fill="${a}"/><path d="M0 40 Q40 30 80 38 T160 34 V100 H0Z" fill="${b}"/><g fill="#EAF7FA"><rect x="30" y="40" width="10" height="44"/><rect x="48" y="38" width="16" height="48"/><rect x="74" y="38" width="12" height="46"/><rect x="96" y="36" width="20" height="50"/><rect x="124" y="35" width="9" height="48"/></g><path d="M0 84 Q80 74 160 86 V100 H0Z" fill="#E6F4F6" opacity=".9"/><path d="M0 90 Q80 84 160 94 V100 H0Z" fill="#3A8F9C"/><g fill="#2E7D4F"><circle cx="10" cy="40" r="10"/><circle cx="150" cy="34" r="12"/></g></svg>`,
+  vinedo:(a,b)=>`<svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><rect width="160" height="100" fill="${a}"/><circle cx="124" cy="24" r="11" fill="#FFD37A"/><path d="M0 58 L30 30 L52 44 L84 16 L112 40 L160 26 V100 H0Z" fill="#7C8FA8"/><path d="M84 16 L76 26 L92 25Z" fill="#fff"/><rect x="0" y="58" width="160" height="42" fill="#C9B27A"/><g stroke="${b}" stroke-width="5" stroke-linecap="round"><path d="M-10 100 L40 62"/><path d="M15 100 L60 62"/><path d="M45 100 L80 62"/><path d="M80 100 L100 62"/><path d="M115 100 L120 62"/><path d="M150 100 L140 62"/></g></svg>`,
+  parque:(a,b)=>`<svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><rect width="160" height="100" fill="${a}"/><circle cx="110" cy="52" r="34" fill="none" stroke="${b}" stroke-width="4"/><g stroke="${b}" stroke-width="2"><path d="M110 18 V86 M76 52 H144 M86 28 L134 76 M134 28 L86 76"/></g><g fill="#FFD37A"><circle cx="110" cy="18" r="4"/><circle cx="144" cy="52" r="4"/><circle cx="76" cy="52" r="4"/><circle cx="86" cy="28" r="4"/><circle cx="134" cy="28" r="4"/></g><path d="M20 100 V60 L34 44 L48 60 V100Z" fill="${b}"/><path d="M14 60 L34 34 L54 60Z" fill="#E25C7A"/><rect x="0" y="86" width="160" height="14" fill="#3F8A55"/></svg>`,
+  europa:(a,b)=>`<svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><rect width="160" height="100" fill="${a}"/><circle cx="132" cy="22" r="10" fill="#FFD37A"/><path d="M70 40 a14 14 0 0 1 28 0Z" fill="${b}"/><rect x="72" y="40" width="24" height="60" fill="${b}"/><g fill="${b}" opacity=".8"><rect x="0" y="48" width="34" height="52"/><rect x="36" y="56" width="32" height="44"/><rect x="100" y="52" width="30" height="48"/><rect x="132" y="44" width="28" height="56"/></g><g fill="#FFF3D6" opacity=".9"><rect x="6" y="58" width="6" height="9"/><rect x="20" y="58" width="6" height="9"/><rect x="6" y="76" width="6" height="9"/><rect x="20" y="76" width="6" height="9"/><rect x="42" y="66" width="6" height="9"/><rect x="56" y="66" width="6" height="9"/><rect x="106" y="62" width="6" height="9"/><rect x="118" y="62" width="6" height="9"/><rect x="138" y="54" width="6" height="9"/><rect x="150" y="54" width="6" height="9"/><rect x="138" y="72" width="6" height="9"/><rect x="150" y="72" width="6" height="9"/></g><g stroke="#0E2A33" stroke-opacity=".35" stroke-width="1.5"><path d="M4 68 H30 M40 76 H66 M104 72 H128 M136 64 H160"/></g></svg>`,
+  torre:(a,b)=>`<svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><rect width="160" height="100" fill="${a}"/><circle cx="36" cy="26" r="11" fill="#FFF3D6"/><path d="M96 6 L100 6 L104 36 L114 70 L124 100 L108 100 Q98 80 88 100 L72 100 L82 70 L92 36Z" fill="${b}"/><g stroke="${a}" stroke-width="2"><path d="M90 46 H106 M84 70 H112"/></g><g fill="${b}" opacity=".6"><rect x="0" y="74" width="60" height="26"/><rect x="128" y="78" width="32" height="22"/></g></svg>`,
+  templo:(a,b)=>`<svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><rect width="160" height="100" fill="${a}"/><circle cx="34" cy="28" r="14" fill="#F2A3A3" opacity=".9"/><g fill="${b}"><path d="M56 40 Q80 30 104 40 L98 44 H62Z"/><rect x="66" y="44" width="28" height="10"/><path d="M50 60 Q80 48 110 60 L102 64 H58Z"/><rect x="62" y="64" width="36" height="12"/><path d="M44 82 Q80 68 116 82 L106 86 H54Z"/><rect x="58" y="86" width="44" height="14"/><rect x="78" y="22" width="4" height="12"/></g><rect x="0" y="94" width="160" height="6" fill="#2F5D3F"/></svg>`,
+  ruinas:(a,b)=>`<svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><rect width="160" height="100" fill="${a}"/><path d="M0 60 L30 26 L58 48 L84 14 L118 52 L160 30 V100 H0Z" fill="#3D6B4E" opacity=".55"/><g fill="${b}"><rect x="40" y="80" width="80" height="20"/><rect x="48" y="68" width="64" height="12"/><rect x="56" y="58" width="48" height="10"/><rect x="66" y="50" width="28" height="8"/></g><path d="M0 92 Q80 84 160 94 V100 H0Z" fill="#2F5D3F"/></svg>`
+};
+/* Fotos reales (Unsplash, licencia libre) */
+const FOTOS = {CUN:"photo-1457537227909-08f41319e53c",GIG:"photo-1772603503638-74ca65f96589",CTG:"photo-1583531352515-8884af319dc1",CUZ:"photo-1526392060635-9d6019884377",BRC:"photo-1598162480222-b2c3d92548d5",PUJ:"photo-1729530687669-9cc04a5e6f63",FLN:"photo-1681157865251-2155d60882c0",MEX:"photo-1547686669-9a8cb1a22d91",IGR:"photo-1590246185449-e9e2ddd683bb",MDZ:"photo-1765574781860-9828db1d53c0",SLA:"photo-1612900538226-0e2140aa02f6",PDP:"photo-1616959313137-186688889054",SCL:"photo-1777466923380-faa2697fda8b",MIA:"photo-1535498730771-e735b998cd64",MCO:"photo-1617409123168-8fb039dd3b39",JFK:"photo-1496588152823-86ff7695e68f",MAD:"photo-1539037116277-4db20889f2d4",BCN:"photo-1630219694734-fe47ab76b15e",FCO:"photo-1626285220266-e35bd313d05b",CDG:"photo-1511739001486-6bfe10ce785f",LIS:"photo-1697748525265-7431cba075b6",HND:"photo-1545569341-9eb8b30979d9",BKK:"photo-1562602833-0f4ab2fc46e3",DXB:"photo-1512453979798-5ea266f8880c"};
+const foto = (d, w=900) => `https://images.unsplash.com/${FOTOS[d.iata]}?auto=format&fit=crop&w=${w}&q=80`;
+const art = (d, w=900) => FOTOS[d.iata] ? `<img src="${foto(d,w)}" alt="${d.ciudad}" loading="lazy" decoding="async">` : ART[d.tipo](`hsl(${d.hue} 55% 72%)`, `hsl(${d.hue} 45% 38%)`);
+
+/* Destinos: época recomendada y barrios (información general de viaje) */
+const DESTINOS = [
+  {iata:"CUN", ciudad:"Cancún", pais:"México", hue:186, tipo:"playa", kind:"Playa", epoca:"dic a abr", intro:"Playa, precio o ambiente: elegí tu prioridad.", zonas:[
+    ["Zona Hotelera","La franja frente al Caribe, con resorts y todo incluido. Playa garantizada."],
+    ["Centro","Más económico y con comida local. Llegás a la playa en colectivo."],
+    ["Playa del Carmen","Alrededor de una hora al sur, con la Quinta Avenida y más vida de calle."]]},
+  {iata:"GIG", ciudad:"Río de Janeiro", pais:"Brasil", hue:160, tipo:"montana", kind:"Playa y cerro", epoca:"may a oct", intro:"Cada playa tiene su barrio y su estilo.", zonas:[
+    ["Copacabana","La clásica: mucha oferta de hoteles, playa enfrente y buena conexión con metro."],
+    ["Ipanema y Leblon","Más exclusivos y caros, con la playa más linda y buenos restaurantes."],
+    ["Botafogo","Más económico, con metro y vista al Pan de Azúcar. Ideal si no te importa caminar a la playa."]]},
+  {iata:"CTG", ciudad:"Cartagena", pais:"Colombia", hue:32, tipo:"colonial", kind:"Colonial", epoca:"dic a abr", intro:"Tres zonas, tres viajes distintos.", zonas:[
+    ["Ciudad Amurallada","El centro histórico: calles coloniales, todo a pie. Es la zona más linda y la más cara."],
+    ["Getsemaní","Barrio bohemio pegado a la muralla, con murales y vida nocturna. Precios medios."],
+    ["Bocagrande","Torres frente al mar, playa y hoteles modernos. A 10 minutos en taxi del centro."]]},
+  {iata:"CUZ", ciudad:"Cusco", pais:"Perú", hue:20, tipo:"ruinas", kind:"Historia", epoca:"may a sep", intro:"Pensá en la altura y en cómo vas a llegar a Machu Picchu.", zonas:[
+    ["Centro Histórico","Alrededor de la Plaza de Armas: todo a pie, restaurantes y agencias de excursiones."],
+    ["San Blas","Barrio de artesanos con calles empinadas y vistas lindas. Más tranquilo de noche."],
+    ["Valle Sagrado","Más bajo y más verde, ideal para aclimatarse. Cerca del tren a Machu Picchu."]]},
+  {iata:"BRC", ciudad:"Bariloche", pais:"Argentina", hue:205, tipo:"montana", kind:"Lagos y nieve", epoca:"todo el año", intro:"Depende de si venís por el lago o por la nieve.", zonas:[
+    ["Centro","Cerca del Centro Cívico, restaurantes y chocolaterías. Práctico si no tenés auto."],
+    ["Avenida Bustillo (km 1 a 8)","Vista al lago Nahuel Huapi y más tranquilidad. Conviene tener auto o usar colectivo."],
+    ["Cerro Catedral","Ideal en temporada de esquí: salís del hotel directo a los medios de elevación."]]},
+  {iata:"PUJ", ciudad:"Punta Cana", pais:"Rep. Dominicana", hue:176, tipo:"playa", kind:"Todo incluido", epoca:"dic a abr", intro:"Casi todo es resort: elegí la zona según cuánto quieras moverte.", zonas:[
+    ["Bávaro","Donde están la mayoría de los resorts, con una playa larguísima y mucha oferta."],
+    ["Cap Cana","Zona de lujo con marina y campos de golf. Más exclusiva y más cara."],
+    ["Uvero Alto","Más alejada y tranquila, ideal para descansar sin salir del hotel."]]},
+  {iata:"FLN", ciudad:"Florianópolis", pais:"Brasil", hue:196, tipo:"playa", kind:"Playa", epoca:"dic a mar", intro:"La isla tiene playas para cada estilo de viaje.", zonas:[
+    ["Norte (Canasvieiras, Jurerê)","Aguas calmas y mucha infraestructura. Ideal para familias."],
+    ["Este (Lagoa da Conceição)","Laguna, surf en Joaquina y la mejor vida nocturna de la isla."],
+    ["Sur (Campeche)","Más natural y tranquilo, con playas largas y menos gente."]]},
+  {iata:"MEX", ciudad:"Ciudad de México", pais:"México", hue:340, tipo:"ciudad", kind:"Ciudad", epoca:"nov a abr", intro:"Una ciudad enorme: elegir bien el barrio te ahorra horas de tráfico.", zonas:[
+    ["Roma y Condesa","Calles arboladas, parques, cafés y restaurantes. Muy caminable."],
+    ["Centro Histórico","El Zócalo, museos y precios más bajos. De noche es más solitario."],
+    ["Polanco","Zona elegante junto al Bosque de Chapultepec y sus museos."]]},
+  {iata:"IGR", ciudad:"Cataratas del Iguazú", pais:"Argentina y Brasil", hue:120, tipo:"cascada", kind:"Naturaleza", epoca:"abr a jun y sep a nov", intro:"Podés dormir del lado argentino, del brasileño o dentro del parque.", zonas:[
+    ["Puerto Iguazú (Argentina)","El pueblo más cómodo: restaurantes, hoteles para todos los precios y 20 minutos al parque."],
+    ["Foz do Iguaçu (Brasil)","Ciudad más grande, con más oferta y precios a veces más bajos. Ideal para ver el lado brasileño."],
+    ["Dentro del parque","Hay pocos hoteles adentro y son caros, pero ves las cataratas sin multitudes."]]},
+  {iata:"MDZ", ciudad:"Mendoza", pais:"Argentina", hue:300, tipo:"vinedo", kind:"Vino y montaña", epoca:"mar a may", intro:"Elegí entre ciudad, bodegas cerca o viñedos al pie de los Andes.", zonas:[
+    ["Centro","Cerca de la Plaza Independencia y de los bares de la calle Arístides Villanueva."],
+    ["Chacras de Coria","Barrio tranquilo y verde, a minutos de las bodegas de Luján de Cuyo."],
+    ["Valle de Uco","Lodges entre viñedos con vista a la cordillera, a una hora y media de la ciudad."]]},
+  {iata:"SLA", ciudad:"Salta", pais:"Argentina", hue:14, tipo:"montana", kind:"Norte y cerros", epoca:"abr a nov", intro:"Una base en la ciudad y escapadas a los valles.", zonas:[
+    ["Centro","Alrededor de la Plaza 9 de Julio, con peñas folclóricas en la calle Balcarce."],
+    ["San Lorenzo","Zona verde y residencial a 20 minutos, con hosterías y más tranquilidad."],
+    ["Cafayate","A unas tres horas, entre bodegas y la Quebrada de las Conchas."]]},
+  {iata:"PDP", ciudad:"Punta del Este", pais:"Uruguay", hue:200, tipo:"playa", kind:"Playa", epoca:"dic a feb", intro:"Cada zona tiene su ritmo: elegí entre ciudad, movida o calma.", zonas:[
+    ["Península","El centro, con el puerto y todo a pie. Práctico si no tenés auto."],
+    ["La Barra","Playas como Bikini y Montoya, con bares y la vida nocturna de verano."],
+    ["José Ignacio","Pueblo exclusivo y tranquilo, a unos 40 minutos. Ideal para descansar."]]},
+  {iata:"SCL", ciudad:"Santiago de Chile", pais:"Chile", hue:230, tipo:"ciudad", kind:"Ciudad", epoca:"sep a nov y mar a may", intro:"Ciudad grande con la cordillera de fondo: el metro es clave.", zonas:[
+    ["Providencia","Céntrica, segura y con metro. Buen equilibrio entre precio y ubicación."],
+    ["Las Condes y Vitacura","Moderna, con rascacielos, shopping y hoteles de negocios. Más cara."],
+    ["Lastarria","Barrio bohemio cerca del centro histórico, con cafés y vida cultural."]]},
+  {iata:"MIA", ciudad:"Miami", pais:"Estados Unidos", hue:320, tipo:"playa", kind:"Playa y compras", epoca:"nov a abr", intro:"Playa, ciudad o tranquilidad: Miami cambia mucho según la zona.", zonas:[
+    ["South Beach","Edificios Art Déco, playa y vida nocturna. La zona más famosa."],
+    ["Brickell y Downtown","Rascacielos, restaurantes y vida urbana. Buena base sin depender de la playa."],
+    ["Sunny Isles","Más tranquilo y familiar, con torres frente al mar al norte de la ciudad."]]},
+  {iata:"MCO", ciudad:"Orlando", pais:"Estados Unidos", hue:270, tipo:"parque", kind:"Parques", epoca:"mar a may y sep a nov", intro:"Todo depende de qué parques vas a visitar.", zonas:[
+    ["International Drive","En el medio de todo: outlets, restaurantes y cerca de Universal."],
+    ["Lake Buena Vista","Pegado a Disney y a Disney Springs, con muchos hoteles para familias."],
+    ["Hoteles de Disney","Dentro del complejo, con transporte a los parques incluido."]]},
+  {iata:"JFK", ciudad:"Nueva York", pais:"Estados Unidos", hue:215, tipo:"ciudad", kind:"Ciudad", epoca:"abr a jun y sep a nov", intro:"Dormir cerca del subte importa más que el barrio exacto.", zonas:[
+    ["Midtown","Times Square, Quinta Avenida y todo cerca. La zona más cómoda y más cara."],
+    ["Lower Manhattan","Más tranquilo de noche, con buenos precios los fines de semana."],
+    ["Long Island City","En Queens, a una o dos paradas de Manhattan y bastante más barato."]]},
+  {iata:"MAD", ciudad:"Madrid", pais:"España", hue:8, tipo:"europa", kind:"Ciudad", epoca:"abr a jun y sep a oct", intro:"Una ciudad para caminar: elegí según tu plan de noche.", zonas:[
+    ["Sol y Centro","Puerta del Sol, Gran Vía y Plaza Mayor a pie. La base clásica."],
+    ["Malasaña y Chueca","Barrios jóvenes con bares, tiendas y mucha vida nocturna."],
+    ["Salamanca","Elegante y tranquilo, con las mejores tiendas y cerca del Retiro."]]},
+  {iata:"BCN", ciudad:"Barcelona", pais:"España", hue:40, tipo:"europa", kind:"Playa y ciudad", epoca:"may a jun y sep", intro:"Arquitectura, playa y barrios con mucho carácter.", zonas:[
+    ["Eixample","Central, con edificios de Gaudí y muy buena conexión de metro."],
+    ["Barrio Gótico y Born","El casco histórico: callecitas, todo a pie y algo de ruido de noche."],
+    ["Barceloneta y Poblenou","Cerca de la playa, ideal en verano."]]},
+  {iata:"FCO", ciudad:"Roma", pais:"Italia", hue:24, tipo:"europa", kind:"Historia", epoca:"abr a jun y sep a oct", intro:"Casi todo se recorre a pie si elegís bien la base.", zonas:[
+    ["Centro Storico","Panteón, Piazza Navona y Fontana di Trevi a pocos pasos."],
+    ["Trastevere","Pintoresco, con trattorias y vida de noche al otro lado del río."],
+    ["Monti","Bohemio y cerca del Coliseo y de la estación Termini."]]},
+  {iata:"CDG", ciudad:"París", pais:"Francia", hue:250, tipo:"torre", kind:"Ciudad", epoca:"abr a jun y sep a oct", intro:"Los distritos (arrondissements) marcan el precio y el ambiente.", zonas:[
+    ["Le Marais","Céntrico, con cafés, museos y vida de barrio. Muy buena ubicación."],
+    ["Saint-Germain-des-Prés","El París clásico y elegante de la orilla izquierda."],
+    ["Montmartre","Encanto de pueblo en la colina del Sacré-Cœur, con precios más bajos."]]},
+  {iata:"LIS", ciudad:"Lisboa", pais:"Portugal", hue:48, tipo:"europa", kind:"Ciudad", epoca:"mar a jun y sep a oct", intro:"Ciudad de colinas: la ubicación te ahorra subidas.", zonas:[
+    ["Baixa y Chiado","El centro, más plano y con todo a mano."],
+    ["Alfama","El barrio más antiguo, con fado y miradores. Calles empinadas."],
+    ["Príncipe Real","Tranquilo y elegante, cerca de la movida del Bairro Alto."]]},
+  {iata:"HND", ciudad:"Tokio", pais:"Japón", hue:350, tipo:"templo", kind:"Cultura", epoca:"mar a may y oct a nov", intro:"Estar cerca de una buena estación de tren es lo más importante.", zonas:[
+    ["Shinjuku","Conexiones a todos lados, mucha oferta de hoteles y vida de noche."],
+    ["Shibuya","Joven, con compras y el famoso cruce peatonal."],
+    ["Asakusa","Tradicional, junto al templo Senso-ji y con precios más bajos."]]},
+  {iata:"BKK", ciudad:"Bangkok", pais:"Tailandia", hue:44, tipo:"templo", kind:"Cultura", epoca:"nov a feb", intro:"Elegí cerca del tren elevado o del río.", zonas:[
+    ["Sukhumvit","Con tren elevado (BTS), restaurantes y hoteles para todos los precios."],
+    ["Riverside","Hoteles junto al río, con barcos hacia los templos y el Gran Palacio."],
+    ["Banglamphu","Cerca de Khao San: económico, mochilero y a pasos de los templos."]]},
+  {iata:"DXB", ciudad:"Dubái", pais:"Emiratos Árabes", hue:36, tipo:"ciudad", kind:"Lujo y desierto", epoca:"nov a mar", intro:"Torres modernas, playa o la ciudad tradicional.", zonas:[
+    ["Downtown","Junto al Burj Khalifa y el Dubai Mall."],
+    ["Dubai Marina y JBR","Torres frente a la playa, con paseo y restaurantes."],
+    ["Deira y Bur Dubai","La parte tradicional, con zocos y precios más bajos."]]}
+];
+const REGION = {
+  "Latinoamérica":["CUN","GIG","CTG","CUZ","BRC","PUJ","FLN","MEX","IGR","MDZ","SLA","PDP","SCL"],
+  "Norteamérica":["MIA","MCO","JFK"],
+  "Europa":["MAD","BCN","FCO","CDG","LIS"],
+  "Asia y Medio Oriente":["HND","BKK","DXB"]
+};
+DESTINOS.forEach(d => { d.region = Object.keys(REGION).find(r => REGION[r].includes(d.iata)); });
+/* Destinos agregados (todo el mundo) */
+const NUEVOS = [{"iata":"USH","ciudad":"Ushuaia","pais":"Argentina","region":"Latinoamérica","epoca":"dic a mar","kind":"Fin del mundo","tipo":"montana","hue":200,"intro":"","zonas":[]},{"iata":"FTE","ciudad":"El Calafate","pais":"Argentina","region":"Latinoamérica","epoca":"nov a mar","kind":"Glaciares","tipo":"montana","hue":200,"intro":"","zonas":[]},{"iata":"MVD","ciudad":"Montevideo","pais":"Uruguay","region":"Latinoamérica","epoca":"nov a mar","kind":"Ciudad","tipo":"ciudad","hue":200,"intro":"","zonas":[]},{"iata":"ASU","ciudad":"Asunción","pais":"Paraguay","region":"Latinoamérica","epoca":"may a sep","kind":"Ciudad","tipo":"ciudad","hue":200,"intro":"","zonas":[]},{"iata":"UYU","ciudad":"Salar de Uyuni","pais":"Bolivia","region":"Latinoamérica","epoca":"abr a oct","kind":"Naturaleza","tipo":"montana","hue":200,"intro":"","zonas":[]},{"iata":"LIM","ciudad":"Lima","pais":"Perú","region":"Latinoamérica","epoca":"dic a abr","kind":"Gastronomía","tipo":"ciudad","hue":200,"intro":"","zonas":[]},{"iata":"GPS","ciudad":"Galápagos","pais":"Ecuador","region":"Latinoamérica","epoca":"todo el año","kind":"Naturaleza","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"UIO","ciudad":"Quito","pais":"Ecuador","region":"Latinoamérica","epoca":"jun a sep","kind":"Colonial","tipo":"colonial","hue":200,"intro":"","zonas":[]},{"iata":"BOG","ciudad":"Bogotá","pais":"Colombia","region":"Latinoamérica","epoca":"dic a mar","kind":"Ciudad","tipo":"ciudad","hue":200,"intro":"","zonas":[]},{"iata":"MDE","ciudad":"Medellín","pais":"Colombia","region":"Latinoamérica","epoca":"dic a mar","kind":"Ciudad","tipo":"ciudad","hue":200,"intro":"","zonas":[]},{"iata":"ADZ","ciudad":"San Andrés","pais":"Colombia","region":"Latinoamérica","epoca":"ene a abr","kind":"Playa","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"PTY","ciudad":"Ciudad de Panamá","pais":"Panamá","region":"Latinoamérica","epoca":"dic a abr","kind":"Ciudad","tipo":"ciudad","hue":200,"intro":"","zonas":[]},{"iata":"SJO","ciudad":"Costa Rica","pais":"Costa Rica","region":"Latinoamérica","epoca":"dic a abr","kind":"Naturaleza","tipo":"montana","hue":200,"intro":"","zonas":[]},{"iata":"GUA","ciudad":"Antigua Guatemala","pais":"Guatemala","region":"Latinoamérica","epoca":"nov a abr","kind":"Colonial","tipo":"colonial","hue":200,"intro":"","zonas":[]},{"iata":"TQO","ciudad":"Tulum","pais":"México","region":"Latinoamérica","epoca":"dic a abr","kind":"Playa","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"SJD","ciudad":"Los Cabos","pais":"México","region":"Latinoamérica","epoca":"nov a abr","kind":"Playa","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"PVR","ciudad":"Puerto Vallarta","pais":"México","region":"Latinoamérica","epoca":"nov a abr","kind":"Playa","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"HAV","ciudad":"La Habana","pais":"Cuba","region":"Latinoamérica","epoca":"nov a abr","kind":"Colonial","tipo":"colonial","hue":200,"intro":"","zonas":[]},{"iata":"VRA","ciudad":"Varadero","pais":"Cuba","region":"Latinoamérica","epoca":"nov a abr","kind":"Playa","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"AUA","ciudad":"Aruba","pais":"Aruba","region":"Latinoamérica","epoca":"todo el año","kind":"Playa","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"CUR","ciudad":"Curazao","pais":"Curazao","region":"Latinoamérica","epoca":"todo el año","kind":"Playa","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"MBJ","ciudad":"Jamaica","pais":"Jamaica","region":"Latinoamérica","epoca":"dic a abr","kind":"Playa","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"NAS","ciudad":"Bahamas","pais":"Bahamas","region":"Latinoamérica","epoca":"dic a abr","kind":"Playa","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"SJU","ciudad":"San Juan","pais":"Puerto Rico","region":"Latinoamérica","epoca":"dic a abr","kind":"Playa y ciudad","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"SDQ","ciudad":"Santo Domingo","pais":"Rep. Dominicana","region":"Latinoamérica","epoca":"dic a abr","kind":"Colonial","tipo":"colonial","hue":200,"intro":"","zonas":[]},{"iata":"SSA","ciudad":"Salvador de Bahía","pais":"Brasil","region":"Latinoamérica","epoca":"sep a mar","kind":"Playa y cultura","tipo":"colonial","hue":200,"intro":"","zonas":[]},{"iata":"SAO","ciudad":"São Paulo","pais":"Brasil","region":"Latinoamérica","epoca":"abr a oct","kind":"Ciudad","tipo":"ciudad","hue":200,"intro":"","zonas":[]},{"iata":"MCZ","ciudad":"Maceió","pais":"Brasil","region":"Latinoamérica","epoca":"sep a mar","kind":"Playa","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"CJC","ciudad":"San Pedro de Atacama","pais":"Chile","region":"Latinoamérica","epoca":"mar a nov","kind":"Desierto","tipo":"montana","hue":200,"intro":"","zonas":[]},{"iata":"PUQ","ciudad":"Torres del Paine","pais":"Chile","region":"Latinoamérica","epoca":"nov a mar","kind":"Naturaleza","tipo":"montana","hue":200,"intro":"","zonas":[]},{"iata":"BZE","ciudad":"Belice","pais":"Belice","region":"Latinoamérica","epoca":"dic a abr","kind":"Playa y selva","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"RTB","ciudad":"Roatán","pais":"Honduras","region":"Latinoamérica","epoca":"feb a ago","kind":"Playa","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"SAL","ciudad":"El Salvador","pais":"El Salvador","region":"Latinoamérica","epoca":"nov a abr","kind":"Playa y surf","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"LAX","ciudad":"Los Ángeles","pais":"Estados Unidos","region":"Norteamérica","epoca":"todo el año","kind":"Ciudad y playa","tipo":"ciudad","hue":200,"intro":"","zonas":[]},{"iata":"LAS","ciudad":"Las Vegas","pais":"Estados Unidos","region":"Norteamérica","epoca":"mar a may y sep a nov","kind":"Ciudad","tipo":"ciudad","hue":200,"intro":"","zonas":[]},{"iata":"SFO","ciudad":"San Francisco","pais":"Estados Unidos","region":"Norteamérica","epoca":"sep a nov","kind":"Ciudad","tipo":"ciudad","hue":200,"intro":"","zonas":[]},{"iata":"CHI","ciudad":"Chicago","pais":"Estados Unidos","region":"Norteamérica","epoca":"may a sep","kind":"Ciudad","tipo":"ciudad","hue":200,"intro":"","zonas":[]},{"iata":"WAS","ciudad":"Washington","pais":"Estados Unidos","region":"Norteamérica","epoca":"mar a may y sep a nov","kind":"Ciudad","tipo":"ciudad","hue":200,"intro":"","zonas":[]},{"iata":"BOS","ciudad":"Boston","pais":"Estados Unidos","region":"Norteamérica","epoca":"may a oct","kind":"Ciudad","tipo":"ciudad","hue":200,"intro":"","zonas":[]},{"iata":"HNL","ciudad":"Hawái","pais":"Estados Unidos","region":"Norteamérica","epoca":"abr a oct","kind":"Playa","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"YTO","ciudad":"Toronto","pais":"Canadá","region":"Norteamérica","epoca":"jun a sep","kind":"Ciudad","tipo":"ciudad","hue":200,"intro":"","zonas":[]},{"iata":"YVR","ciudad":"Vancouver","pais":"Canadá","region":"Norteamérica","epoca":"jun a sep","kind":"Naturaleza","tipo":"montana","hue":200,"intro":"","zonas":[]},{"iata":"YMQ","ciudad":"Montreal","pais":"Canadá","region":"Norteamérica","epoca":"jun a sep","kind":"Ciudad","tipo":"europa","hue":200,"intro":"","zonas":[]},{"iata":"LON","ciudad":"Londres","pais":"Reino Unido","region":"Europa","epoca":"may a sep","kind":"Ciudad","tipo":"ciudad","hue":200,"intro":"","zonas":[]},{"iata":"EDI","ciudad":"Edimburgo","pais":"Reino Unido","region":"Europa","epoca":"may a sep","kind":"Historia","tipo":"europa","hue":200,"intro":"","zonas":[]},{"iata":"DUB","ciudad":"Dublín","pais":"Irlanda","region":"Europa","epoca":"may a sep","kind":"Ciudad","tipo":"europa","hue":200,"intro":"","zonas":[]},{"iata":"AMS","ciudad":"Ámsterdam","pais":"Países Bajos","region":"Europa","epoca":"abr a sep","kind":"Ciudad","tipo":"europa","hue":200,"intro":"","zonas":[]},{"iata":"BRU","ciudad":"Bruselas","pais":"Bélgica","region":"Europa","epoca":"abr a sep","kind":"Ciudad","tipo":"europa","hue":200,"intro":"","zonas":[]},{"iata":"BER","ciudad":"Berlín","pais":"Alemania","region":"Europa","epoca":"may a sep","kind":"Ciudad","tipo":"ciudad","hue":200,"intro":"","zonas":[]},{"iata":"MUC","ciudad":"Múnich","pais":"Alemania","region":"Europa","epoca":"may a oct","kind":"Ciudad","tipo":"europa","hue":200,"intro":"","zonas":[]},{"iata":"ZRH","ciudad":"Suiza","pais":"Suiza","region":"Europa","epoca":"jun a sep y dic a mar","kind":"Montaña","tipo":"montana","hue":200,"intro":"","zonas":[]},{"iata":"VIE","ciudad":"Viena","pais":"Austria","region":"Europa","epoca":"abr a oct","kind":"Ciudad","tipo":"europa","hue":200,"intro":"","zonas":[]},{"iata":"PRG","ciudad":"Praga","pais":"Rep. Checa","region":"Europa","epoca":"abr a oct","kind":"Historia","tipo":"europa","hue":200,"intro":"","zonas":[]},{"iata":"BUD","ciudad":"Budapest","pais":"Hungría","region":"Europa","epoca":"abr a oct","kind":"Ciudad","tipo":"europa","hue":200,"intro":"","zonas":[]},{"iata":"KRK","ciudad":"Cracovia","pais":"Polonia","region":"Europa","epoca":"may a sep","kind":"Historia","tipo":"europa","hue":200,"intro":"","zonas":[]},{"iata":"VCE","ciudad":"Venecia","pais":"Italia","region":"Europa","epoca":"abr a jun y sep a oct","kind":"Ciudad","tipo":"europa","hue":200,"intro":"","zonas":[]},{"iata":"FLR","ciudad":"Florencia","pais":"Italia","region":"Europa","epoca":"abr a jun y sep a oct","kind":"Arte","tipo":"europa","hue":200,"intro":"","zonas":[]},{"iata":"MIL","ciudad":"Milán","pais":"Italia","region":"Europa","epoca":"abr a jun y sep a oct","kind":"Ciudad","tipo":"europa","hue":200,"intro":"","zonas":[]},{"iata":"NAP","ciudad":"Costa Amalfitana","pais":"Italia","region":"Europa","epoca":"may a sep","kind":"Playa","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"NCE","ciudad":"Niza","pais":"Francia","region":"Europa","epoca":"may a sep","kind":"Playa","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"OPO","ciudad":"Oporto","pais":"Portugal","region":"Europa","epoca":"abr a oct","kind":"Ciudad","tipo":"europa","hue":200,"intro":"","zonas":[]},{"iata":"SVQ","ciudad":"Sevilla","pais":"España","region":"Europa","epoca":"mar a may y oct a nov","kind":"Historia","tipo":"colonial","hue":200,"intro":"","zonas":[]},{"iata":"PMI","ciudad":"Mallorca","pais":"España","region":"Europa","epoca":"may a sep","kind":"Playa","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"IBZ","ciudad":"Ibiza","pais":"España","region":"Europa","epoca":"jun a sep","kind":"Playa y fiesta","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"ATH","ciudad":"Atenas","pais":"Grecia","region":"Europa","epoca":"abr a jun y sep a oct","kind":"Historia","tipo":"ruinas","hue":200,"intro":"","zonas":[]},{"iata":"JTR","ciudad":"Santorini","pais":"Grecia","region":"Europa","epoca":"may a oct","kind":"Islas","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"IST","ciudad":"Estambul","pais":"Turquía","region":"Europa","epoca":"abr a may y sep a nov","kind":"Cultura","tipo":"templo","hue":200,"intro":"","zonas":[]},{"iata":"DBV","ciudad":"Dubrovnik","pais":"Croacia","region":"Europa","epoca":"may a oct","kind":"Playa e historia","tipo":"europa","hue":200,"intro":"","zonas":[]},{"iata":"MLA","ciudad":"Malta","pais":"Malta","region":"Europa","epoca":"abr a oct","kind":"Islas","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"CPH","ciudad":"Copenhague","pais":"Dinamarca","region":"Europa","epoca":"may a sep","kind":"Ciudad","tipo":"europa","hue":200,"intro":"","zonas":[]},{"iata":"STO","ciudad":"Estocolmo","pais":"Suecia","region":"Europa","epoca":"jun a ago","kind":"Ciudad","tipo":"europa","hue":200,"intro":"","zonas":[]},{"iata":"OSL","ciudad":"Noruega","pais":"Noruega","region":"Europa","epoca":"jun a ago","kind":"Fiordos","tipo":"montana","hue":200,"intro":"","zonas":[]},{"iata":"REK","ciudad":"Islandia","pais":"Islandia","region":"Europa","epoca":"jun a ago","kind":"Naturaleza","tipo":"montana","hue":200,"intro":"","zonas":[]},{"iata":"RVN","ciudad":"Laponia","pais":"Finlandia","region":"Europa","epoca":"dic a mar","kind":"Nieve","tipo":"montana","hue":200,"intro":"","zonas":[]},{"iata":"SEL","ciudad":"Seúl","pais":"Corea del Sur","region":"Asia y Medio Oriente","epoca":"abr a jun y sep a nov","kind":"Ciudad","tipo":"ciudad","hue":200,"intro":"","zonas":[]},{"iata":"OSA","ciudad":"Kioto y Osaka","pais":"Japón","region":"Asia y Medio Oriente","epoca":"mar a may y oct a nov","kind":"Cultura","tipo":"templo","hue":200,"intro":"","zonas":[]},{"iata":"BJS","ciudad":"Pekín","pais":"China","region":"Asia y Medio Oriente","epoca":"abr a may y sep a oct","kind":"Historia","tipo":"templo","hue":200,"intro":"","zonas":[]},{"iata":"SHA","ciudad":"Shanghái","pais":"China","region":"Asia y Medio Oriente","epoca":"abr a may y sep a nov","kind":"Ciudad","tipo":"ciudad","hue":200,"intro":"","zonas":[]},{"iata":"HKG","ciudad":"Hong Kong","pais":"Hong Kong","region":"Asia y Medio Oriente","epoca":"oct a dic","kind":"Ciudad","tipo":"ciudad","hue":200,"intro":"","zonas":[]},{"iata":"TPE","ciudad":"Taipéi","pais":"Taiwán","region":"Asia y Medio Oriente","epoca":"oct a abr","kind":"Ciudad","tipo":"ciudad","hue":200,"intro":"","zonas":[]},{"iata":"SIN","ciudad":"Singapur","pais":"Singapur","region":"Asia y Medio Oriente","epoca":"feb a abr","kind":"Ciudad","tipo":"ciudad","hue":200,"intro":"","zonas":[]},{"iata":"KUL","ciudad":"Kuala Lumpur","pais":"Malasia","region":"Asia y Medio Oriente","epoca":"dic a feb y jun a ago","kind":"Ciudad","tipo":"ciudad","hue":200,"intro":"","zonas":[]},{"iata":"DPS","ciudad":"Bali","pais":"Indonesia","region":"Asia y Medio Oriente","epoca":"abr a oct","kind":"Playa y templos","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"HKT","ciudad":"Phuket","pais":"Tailandia","region":"Asia y Medio Oriente","epoca":"nov a abr","kind":"Playa","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"HAN","ciudad":"Hanói y Ha Long","pais":"Vietnam","region":"Asia y Medio Oriente","epoca":"oct a abr","kind":"Naturaleza","tipo":"montana","hue":200,"intro":"","zonas":[]},{"iata":"SGN","ciudad":"Ho Chi Minh","pais":"Vietnam","region":"Asia y Medio Oriente","epoca":"dic a abr","kind":"Ciudad","tipo":"ciudad","hue":200,"intro":"","zonas":[]},{"iata":"REP","ciudad":"Angkor","pais":"Camboya","region":"Asia y Medio Oriente","epoca":"nov a mar","kind":"Historia","tipo":"ruinas","hue":200,"intro":"","zonas":[]},{"iata":"PPS","ciudad":"Palawan","pais":"Filipinas","region":"Asia y Medio Oriente","epoca":"dic a may","kind":"Playa","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"MLE","ciudad":"Maldivas","pais":"Maldivas","region":"Asia y Medio Oriente","epoca":"nov a abr","kind":"Playa","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"DEL","ciudad":"India","pais":"India","region":"Asia y Medio Oriente","epoca":"oct a mar","kind":"Historia","tipo":"templo","hue":200,"intro":"","zonas":[]},{"iata":"KTM","ciudad":"Nepal","pais":"Nepal","region":"Asia y Medio Oriente","epoca":"oct a nov y mar a may","kind":"Montaña","tipo":"montana","hue":200,"intro":"","zonas":[]},{"iata":"CMB","ciudad":"Sri Lanka","pais":"Sri Lanka","region":"Asia y Medio Oriente","epoca":"dic a abr","kind":"Playa y cultura","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"AUH","ciudad":"Abu Dabi","pais":"Emiratos Árabes","region":"Asia y Medio Oriente","epoca":"nov a mar","kind":"Lujo","tipo":"ciudad","hue":200,"intro":"","zonas":[]},{"iata":"DOH","ciudad":"Doha","pais":"Catar","region":"Asia y Medio Oriente","epoca":"nov a mar","kind":"Ciudad","tipo":"ciudad","hue":200,"intro":"","zonas":[]},{"iata":"AMM","ciudad":"Petra","pais":"Jordania","region":"Asia y Medio Oriente","epoca":"mar a may y sep a nov","kind":"Historia","tipo":"ruinas","hue":200,"intro":"","zonas":[]},{"iata":"CAI","ciudad":"El Cairo","pais":"Egipto","region":"África","epoca":"oct a abr","kind":"Historia","tipo":"ruinas","hue":200,"intro":"","zonas":[]},{"iata":"RAK","ciudad":"Marrakech","pais":"Marruecos","region":"África","epoca":"mar a may y sep a nov","kind":"Cultura","tipo":"colonial","hue":200,"intro":"","zonas":[]},{"iata":"CPT","ciudad":"Ciudad del Cabo","pais":"Sudáfrica","region":"África","epoca":"nov a mar","kind":"Naturaleza","tipo":"montana","hue":200,"intro":"","zonas":[]},{"iata":"NBO","ciudad":"Kenia","pais":"Kenia","region":"África","epoca":"jul a oct","kind":"Safari","tipo":"montana","hue":200,"intro":"","zonas":[]},{"iata":"ZNZ","ciudad":"Zanzíbar","pais":"Tanzania","region":"África","epoca":"jun a oct","kind":"Playa","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"MRU","ciudad":"Mauricio","pais":"Mauricio","region":"África","epoca":"may a dic","kind":"Playa","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"SEZ","ciudad":"Seychelles","pais":"Seychelles","region":"África","epoca":"abr a may y oct a nov","kind":"Playa","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"SYD","ciudad":"Sídney","pais":"Australia","region":"Oceanía","epoca":"sep a nov y mar a may","kind":"Ciudad y playa","tipo":"ciudad","hue":200,"intro":"","zonas":[]},{"iata":"MEL","ciudad":"Melbourne","pais":"Australia","region":"Oceanía","epoca":"mar a may y sep a nov","kind":"Ciudad","tipo":"ciudad","hue":200,"intro":"","zonas":[]},{"iata":"ZQN","ciudad":"Nueva Zelanda","pais":"Nueva Zelanda","region":"Oceanía","epoca":"dic a feb","kind":"Aventura","tipo":"montana","hue":200,"intro":"","zonas":[]},{"iata":"NAN","ciudad":"Fiyi","pais":"Fiyi","region":"Oceanía","epoca":"may a oct","kind":"Playa","tipo":"playa","hue":200,"intro":"","zonas":[]},{"iata":"PPT","ciudad":"Bora Bora","pais":"Polinesia Francesa","region":"Oceanía","epoca":"may a oct","kind":"Playa","tipo":"playa","hue":200,"intro":"","zonas":[]}];
+NUEVOS.forEach(n => { DESTINOS.push(n); (REGION[n.region] = REGION[n.region] || []).push(n.iata); });
+const EXTRA = {"FOTOS":{"USH":"photo-1615656637621-5aa19f1ef847","FTE":"photo-1782844725145-50f644ba4bbd","MVD":"photo-1771766316502-e5a00f3b839a","ASU":"photo-1585318822320-300abf39f65d","UYU":"photo-1774763160496-a5169aa77654","LIM":"photo-1660521844005-015733ce411e","GPS":"photo-1503301360699-4f60cf292ec8","UIO":"photo-1767065856515-b754f9953dc2","BOG":"photo-1759375253713-bde59f4f5596","MDE":"photo-1551282643-392c82ebb909","ADZ":"photo-1706219723950-5160b385e91e","PTY":"photo-1524544187526-2b2855b65f16","SJO":"photo-1786328349905-99d545bd07f7","GUA":"photo-1775132678892-54a608a85766","TQO":"photo-1775159363607-c78429fe81af","SJD":"photo-1580846629083-02669741360a","PVR":"photo-1772065255160-60d98e8d7fb2","HAV":"photo-1786477186200-1e33caefa12e","VRA":"photo-1691072256926-13a580c605c8","AUA":"photo-1759365840055-14a90826996c","CUR":"photo-1583655876950-65ea802a4186","MBJ":"photo-1613758161254-93201c574c4f","NAS":"photo-1787259295433-eeae01f7060f","SJU":"photo-1647577298267-701a73d4f876","SDQ":"photo-1771980590225-26af59a07802","SSA":"photo-1787156154347-1c24aa9759a1","SAO":"photo-1764444218574-d7458950bf4c","MCZ":"photo-1632415978225-ffe0d0f2703e","CJC":"photo-1556741495-4a9f3c6935e8","PUQ":"photo-1777801008719-356cf1e2bcad","BZE":"photo-1788033104721-3f938d5d3306","RTB":"photo-1668813922296-4ae452e04642","SAL":"photo-1786577836261-38562e728bb0","LAX":"photo-1580655653885-65763b2597d0","LAS":"photo-1770234894997-fd03f994021b","SFO":"photo-1450149632596-3ef25a62011a","CHI":"photo-1714662660476-022bfd34cf44","WAS":"photo-1581097543550-b3cbe2e6ea6e","BOS":"photo-1573524949339-b830334a31ee","HNL":"photo-1598135753163-6167c1a1ad65","YTO":"photo-1507992781348-310259076fe0","YVR":"photo-1647655806923-e8202f4f2b8c","YMQ":"photo-1576375801517-45814f908aa4","LON":"photo-1486299267070-83823f5448dd","EDI":"photo-1535448033526-c0e85c9e6968","DUB":"photo-1549918864-48ac978761a4","AMS":"photo-1759512605031-e285d92af608","BRU":"photo-1575845664732-ee40fdc525a3","BER":"photo-1587330979470-3595ac045ab0","MUC":"photo-1762013310064-e3f955bc59be","ZRH":"photo-1521292270410-a8c4d716d518","VIE":"photo-1781371565925-7863a178c223","PRG":"photo-1600623471616-8c1966c91ff6","BUD":"photo-1565426873118-a17ed65d74b9","KRK":"photo-1636903364559-0dfc358abd94","VCE":"photo-1767738912443-46be91790af7","FLR":"photo-1543429258-cc721a300e8a","MIL":"photo-1567760855784-589f09ed5dc6","NAP":"photo-1583844056361-4418a8f2a985","NCE":"photo-1758972574387-42373e89a092","OPO":"photo-1769446219841-b16d902ad0fc","SVQ":"photo-1661442196003-f2f6eb54bd94","PMI":"photo-1767045572136-868c9407818b","IBZ":"photo-1783341258347-f697d6326f6c","ATH":"photo-1555993539-1732b0258235","JTR":"photo-1783442828255-cd8ea1f13750","IST":"photo-1589561454226-796a8aa89b05","DBV":"photo-1555990793-da11153b2473","MLA":"photo-1587974928552-4f4aac51b45d","CPH":"photo-1693085777063-138a4cf57c3f","STO":"photo-1775503297743-79cbf6aca396","OSL":"photo-1781444554216-60fa5ac34903","REK":"photo-1529963183134-61a90db47eaf","RVN":"photo-1761236714958-cbe57bd47898","SEL":"photo-1570191913384-7b4ff11716e7","OSA":"photo-1770387795112-e2b476b15f71","BJS":"photo-1571822325911-c01620a65e86","SHA":"photo-1783419180405-5465eab6b38d","HKG":"photo-1764838055796-67c69e6f68cb","TPE":"photo-1777137748365-804ab53dd279","SIN":"photo-1628221680019-f28a2716e727","KUL":"photo-1762618300114-94ce42f22a53","DPS":"photo-1766854269605-bd06cb72217e","HKT":"photo-1770198304885-4a2e22587f31","HAN":"photo-1771992797585-2fdcf801ca62","SGN":"photo-1602646994030-464f98de5e5c","REP":"photo-1566706546199-a93ba33ce9f7","PPS":"photo-1758782552293-bbc834452bf3","MLE":"photo-1759676015346-a2ea5f4a3caa","DEL":"photo-1587135941948-670b381f08ce","KTM":"photo-1544735716-392fe2489ffa","CMB":"photo-1612862862126-865765df2ded","AUH":"photo-1619729239841-d7354ebf9bb3","DOH":"photo-1647252262017-582a7dbb73d0","AMM":"photo-1554357475-accb8a88a330","CAI":"photo-1574864745093-5566c5be5855","RAK":"photo-1653323792487-6ecc6217040b","CPT":"photo-1765706729877-cf69f724921b","NBO":"photo-1761040436225-7744ca1614ff","ZNZ":"photo-1575999502951-4ab25b5ca889","MRU":"photo-1513415431848-a433b3de449f","SEZ":"photo-1624964651025-5bf433458ca8","SYD":"photo-1523059623039-a9ed027e7fad","MEL":"photo-1545044846-351ba102b6d5","ZQN":"photo-1593755673003-8ca8dbf906c2","NAN":"photo-1717361054046-eda52d552736","PPT":"photo-1676405328043-85738f8473ba"},"VUELO":{"USH":"USH","FTE":"FTE","MVD":"MVD","ASU":"ASU","UYU":"UYU","LIM":"LIM","GPS":"GPS","UIO":"UIO","BOG":"BOG","MDE":"MDE","ADZ":"ADZ","PTY":"PTY","SJO":"SJO","GUA":"GUA","TQO":"CUN","SJD":"SJD","PVR":"PVR","HAV":"HAV","VRA":"VRA","AUA":"AUA","CUR":"CUR","MBJ":"MBJ","NAS":"NAS","SJU":"SJU","SDQ":"SDQ","SSA":"SSA","SAO":"SAO","MCZ":"MCZ","CJC":"CJC","PUQ":"PUQ","BZE":"BZE","RTB":"RTB","SAL":"SAL","LAX":"LAX","LAS":"LAS","SFO":"SFO","CHI":"CHI","WAS":"WAS","BOS":"BOS","HNL":"HNL","YTO":"YTO","YVR":"YVR","YMQ":"YMQ","LON":"LON","EDI":"EDI","DUB":"DUB","AMS":"AMS","BRU":"BRU","BER":"BER","MUC":"MUC","ZRH":"ZRH","VIE":"VIE","PRG":"PRG","BUD":"BUD","KRK":"KRK","VCE":"VCE","FLR":"FLR","MIL":"MIL","NAP":"NAP","NCE":"NCE","OPO":"OPO","SVQ":"SVQ","PMI":"PMI","IBZ":"IBZ","ATH":"ATH","JTR":"JTR","IST":"IST","DBV":"DBV","MLA":"MLA","CPH":"CPH","STO":"STO","OSL":"OSL","REK":"REK","RVN":"RVN","SEL":"SEL","OSA":"OSA","BJS":"BJS","SHA":"SHA","HKG":"HKG","TPE":"TPE","SIN":"SIN","KUL":"KUL","DPS":"DPS","HKT":"HKT","HAN":"HAN","SGN":"SGN","REP":"REP","PPS":"PPS","MLE":"MLE","DEL":"DEL","KTM":"KTM","CMB":"CMB","AUH":"AUH","DOH":"DOH","AMM":"AMM","CAI":"CAI","RAK":"RAK","CPT":"CPT","NBO":"NBO","ZNZ":"ZNZ","MRU":"MRU","SEZ":"SEZ","SYD":"SYD","MEL":"MEL","ZQN":"ZQN","NAN":"NAN","PPT":"PPT"},"CIUDAD_EN":{"USH":"Ushuaia","FTE":"El Calafate","MVD":"Montevideo","ASU":"Asuncion","UYU":"Uyuni","LIM":"Lima","GPS":"Galapagos","UIO":"Quito","BOG":"Bogota","MDE":"Medellin","ADZ":"San Andres","PTY":"Panama City","SJO":"San Jose","GUA":"Guatemala City","TQO":"Tulum","SJD":"Los Cabos","PVR":"Puerto Vallarta","HAV":"Havana","VRA":"Varadero","AUA":"Aruba","CUR":"Curacao","MBJ":"Montego Bay","NAS":"Nassau","SJU":"San Juan","SDQ":"Santo Domingo","SSA":"Salvador","SAO":"Sao Paulo","MCZ":"Maceio","CJC":"Calama","PUQ":"Punta Arenas","BZE":"Belize City","RTB":"Roatan","SAL":"San Salvador","LAX":"Los Angeles","LAS":"Las Vegas","SFO":"San Francisco","CHI":"Chicago","WAS":"Washington","BOS":"Boston","HNL":"Honolulu","YTO":"Toronto","YVR":"Vancouver","YMQ":"Montreal","LON":"London","EDI":"Edinburgh","DUB":"Dublin","AMS":"Amsterdam","BRU":"Brussels","BER":"Berlin","MUC":"Munich","ZRH":"Zurich","VIE":"Vienna","PRG":"Prague","BUD":"Budapest","KRK":"Krakow","VCE":"Venice","FLR":"Florence","MIL":"Milan","NAP":"Naples","NCE":"Nice","OPO":"Porto","SVQ":"Seville","PMI":"Palma de Mallorca","IBZ":"Ibiza","ATH":"Athens","JTR":"Santorini","IST":"Istanbul","DBV":"Dubrovnik","MLA":"Valletta","CPH":"Copenhagen","STO":"Stockholm","OSL":"Oslo","REK":"Reykjavik","RVN":"Rovaniemi","SEL":"Seoul","OSA":"Osaka","BJS":"Beijing","SHA":"Shanghai","HKG":"Hong Kong","TPE":"Taipei","SIN":"Singapore","KUL":"Kuala Lumpur","DPS":"Bali","HKT":"Phuket","HAN":"Hanoi","SGN":"Ho Chi Minh City","REP":"Siem Reap","PPS":"Puerto Princesa","MLE":"Male","DEL":"Delhi","KTM":"Kathmandu","CMB":"Colombo","AUH":"Abu Dhabi","DOH":"Doha","AMM":"Amman","CAI":"Cairo","RAK":"Marrakech","CPT":"Cape Town","NBO":"Nairobi","ZNZ":"Zanzibar","MRU":"Mauritius","SEZ":"Mahe","SYD":"Sydney","MEL":"Melbourne","ZQN":"Queenstown","NAN":"Nadi","PPT":"Papeete"},"PAIS_EN":{"USH":"Argentina","FTE":"Argentina","MVD":"Uruguay","ASU":"Paraguay","UYU":"Bolivia","LIM":"Peru","GPS":"Ecuador","UIO":"Ecuador","BOG":"Colombia","MDE":"Colombia","ADZ":"Colombia","PTY":"Panama","SJO":"Costa Rica","GUA":"Guatemala","TQO":"Mexico","SJD":"Mexico","PVR":"Mexico","HAV":"Cuba","VRA":"Cuba","AUA":"Aruba","CUR":"Curacao","MBJ":"Jamaica","NAS":"Bahamas","SJU":"Puerto Rico","SDQ":"Dominican Republic","SSA":"Brazil","SAO":"Brazil","MCZ":"Brazil","CJC":"Chile","PUQ":"Chile","BZE":"Belize","RTB":"Honduras","SAL":"El Salvador","LAX":"United States","LAS":"United States","SFO":"United States","CHI":"United States","WAS":"United States","BOS":"United States","HNL":"United States","YTO":"Canada","YVR":"Canada","YMQ":"Canada","LON":"United Kingdom","EDI":"United Kingdom","DUB":"Ireland","AMS":"Netherlands","BRU":"Belgium","BER":"Germany","MUC":"Germany","ZRH":"Switzerland","VIE":"Austria","PRG":"Czech Republic","BUD":"Hungary","KRK":"Poland","VCE":"Italy","FLR":"Italy","MIL":"Italy","NAP":"Italy","NCE":"France","OPO":"Portugal","SVQ":"Spain","PMI":"Spain","IBZ":"Spain","ATH":"Greece","JTR":"Greece","IST":"Turkey","DBV":"Croatia","MLA":"Malta","CPH":"Denmark","STO":"Sweden","OSL":"Norway","REK":"Iceland","RVN":"Finland","SEL":"South Korea","OSA":"Japan","BJS":"China","SHA":"China","HKG":"Hong Kong","TPE":"Taiwan","SIN":"Singapore","KUL":"Malaysia","DPS":"Indonesia","HKT":"Thailand","HAN":"Vietnam","SGN":"Vietnam","REP":"Cambodia","PPS":"Philippines","MLE":"Maldives","DEL":"India","KTM":"Nepal","CMB":"Sri Lanka","AUH":"United Arab Emirates","DOH":"Qatar","AMM":"Jordan","CAI":"Egypt","RAK":"Morocco","CPT":"South Africa","NBO":"Kenya","ZNZ":"Tanzania","MRU":"Mauritius","SEZ":"Seychelles","SYD":"Australia","MEL":"Australia","ZQN":"New Zealand","NAN":"Fiji","PPT":"French Polynesia"}};
+Object.assign(FOTOS, EXTRA.FOTOS);
+
+
+const $ = s => document.querySelector(s);
+const esc = t => String(t).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const waLink = msg => `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(msg)}`;
+const waIcon = '<svg width="18" height="18" aria-hidden="true"><use href="#i-wa"/></svg>';
+const fechaCorta = v => { if (!v) return ""; const [y,m,d] = v.split("-"); return `${d}/${m}/${y}`; };
+
+// Servicios con enlaces de socio
+const linkSocio = s => `href="${s.url}" target="_blank" rel="noopener sponsored"`;
+/* Datos de cada destino para precargar los buscadores */
+const VUELO = {CUN:"CUN",GIG:"RIO",CTG:"CTG",CUZ:"CUZ",BRC:"BRC",PUJ:"PUJ",FLN:"FLN",MEX:"MEX",IGR:"IGR",MDZ:"MDZ",SLA:"SLA",PDP:"PDP",SCL:"SCL",MIA:"MIA",MCO:"ORL",JFK:"NYC",MAD:"MAD",BCN:"BCN",FCO:"ROM",CDG:"PAR",LIS:"LIS",HND:"TYO",BKK:"BKK",DXB:"DXB"};
+const CIUDAD_EN = {CUN:"Cancun",GIG:"Rio de Janeiro",CTG:"Cartagena",CUZ:"Cusco",BRC:"Bariloche",PUJ:"Punta Cana",FLN:"Florianopolis",MEX:"Mexico City",IGR:"Puerto Iguazu",MDZ:"Mendoza",SLA:"Salta",PDP:"Punta del Este",SCL:"Santiago",MIA:"Miami",MCO:"Orlando",JFK:"New York",MAD:"Madrid",BCN:"Barcelona",FCO:"Rome",CDG:"Paris",LIS:"Lisbon",HND:"Tokyo",BKK:"Bangkok",DXB:"Dubai"};
+const PAIS_EN = {CUN:"Mexico",GIG:"Brazil",CTG:"Colombia",CUZ:"Peru",BRC:"Argentina",PUJ:"Dominican Republic",FLN:"Brazil",MEX:"Mexico",IGR:"Argentina",MDZ:"Argentina",SLA:"Argentina",PDP:"Uruguay",SCL:"Chile",MIA:"United States",MCO:"United States",JFK:"United States",MAD:"Spain",BCN:"Spain",FCO:"Italy",CDG:"France",LIS:"Portugal",HND:"Japan",BKK:"Thailand",DXB:"United Arab Emirates"};
+const AUTOS = {"CUN": ["Cancun Airport", "Cancun Downtown", "Cancun Plaza La Isla", "Cancun Walmart", "Cancun Hotel Zone"], "GIG": ["Rio de Janeiro Airport Galeao", "Rio de Janeiro Airport S. Dumo", "Rio de Janeiro Downtown", "Rio de Janeiro Barra da Tijuca", "Rio de Janeiro Copacabana"], "CTG": ["Cartagena Airport", "Cartagena Downtown", "Cartagena Delivery to Hotel"], "CUZ": ["Cusco Airport", "Cusco Downtown"], "BRC": ["Bariloche Airport", "Bariloche Downtown", "Bariloche LLAO LLAO", "Bariloche PARKING LOT"], "PUJ": ["Punta Cana Airport", "Punta Cana Downtown", "Punta Cana Bavaro"], "FLN": ["Florianopolis Airport", "Florianopolis Downtown", "Florianopolis East", "Florianopolis Henrique Valgas Road", "Florianopolis North"], "MEX": ["Mexico City Downtown"], "IGR": ["Puerto Iguazu Airport", "Puerto Iguazu Downtown"], "MDZ": ["Mendoza Airport", "Mendoza Downtown"], "SLA": ["Salta Airport", "Salta Downtown", "Salta Hotel delivery"], "PDP": ["Punta del Este Airport", "Punta del Este"], "SCL": ["Santiago International Airport", "Santiago Downtown"], "MIA": ["Miami Airport", "Miami North Beach Downtown", "Miami South Beach Downtown", "Miami Downtown", "Miami Lakes Downtown"], "MCO": ["Orlando Airport", "Orlando Sanford International Airport", "Orlando Executive Airport", "Disney Car Care Downtown", "Orlando Downtown"], "JFK": ["New York City John F Kennedy Airport", "New York City La Guardia Airport", "New York City Downtown", "West New York Downtown", "New York City Times Square"], "MAD": ["Madrid Airport", "Madrid Alcobendas", "Madrid Alcorcon", "Madrid Chamartin Railway Station"], "BCN": ["Barcelona Airport", "Barcelona Downtown", "Barcelona Granollers"], "FCO": ["Rome Airport Ciampino", "Rome Airport Fiumicino", "Rome Downtown"], "CDG": ["Paris Charles De Gaulle Airport", "Paris Le Bourget Airport", "Paris Orly Airport"], "LIS": ["Lisboa Airport", "Lisboa Downtown", "Lisboa Hotel Tivoli", "Lisboa Oriente", "Lisboa Prior Velho"], "HND": ["Tokyo Airport Narita", "Tokyo International Airport", "Tokyo Komone", "Tokyo Fuchu", "Tokyo Ikebukuro Railway Station"], "BKK": ["Bangkok Suvarnabhumi Airport", "Bangkok Airport Don Muang", "Bangkok Downtown", "Bangkok Sutthisan", "Bangkok Ratchadaphisek"], "DXB": ["Dubai Airport T1", "Dubai Airport T2", "Dubai Airport T3", "Dubai Downtown", "Dubai Al Quoz Industrial"]};
+Object.assign(VUELO, EXTRA.VUELO); Object.assign(CIUDAD_EN, EXTRA.CIUDAD_EN); Object.assign(PAIS_EN, EXTRA.PAIS_EN); Object.assign(AUTOS, {"USH":["Ushuaia Airport","Ushuaia Downtown"],"FTE":["El Calafate International Airport","El Calafate Downtown"],"MVD":["Montevideo Airport","Montevideo Downtown","Montevideo Carrasco Downtown","Montevideo Port","Montevideo Peir"],"ASU":["Silvio Pettirossi International Airport","Asuncion Downtown","Asuncion East","Asuncion Eligio Ayala","Asuncion Hotel Sheraton"],"UYU":[],"LIM":["Quelimane Airport","Lima International Airport","Colima Airport","Limassol Downtown","Lima Miraflores Downtown"],"GPS":[],"UIO":["Quito Airport","Quito Downtown","Quito Granados","Quito North"],"BOG":["Bogota International Airport","Bogota Downtown","Bogota South","Bogota Delivery Within City Limits"],"MDE":["Meddellin International Airport","Medellin Enrique Olaya Herrera Airport","Medellin Downtown","Medellin El Tesoro Shopping Center"],"ADZ":[],"PTY":["Panama City Airport","Panama Marcos Gelabert Airport","Panama Tocumen International Airport","Panama City Downtown","Panama City Downtown"],"SJO":["San Jose Airport","San Jose Airport","Los Cabos International Airport","San Jose Downtown","San Jose Downtown"],"GUA":["Guatemala La Aurora Airport","Guatemala Downtown","Guatemala Zona 10","Guatemala Antigua"],"TQO":["Tulum Downtown","Cancun Tulum","Playa del Carmen Tulum","Tulum Dreams Tulum Resort & Spa","Tulum Grand Bahia Principe Coba"],"SJD":["Los Cabos International Airport","Los Cabos Downtown","Los Cabos Fiesta Americana","Los Cabos Hilton Hotel"],"PVR":["Puerto Vallarta Airport","Puerto Vallarta Velas Hotel","Puerto Vallarta Grand Velas","Puerto Vallarta Hotel Grand Velas","Puerto Vallarta Hotel Velas"],"HAV":[],"VRA":[],"AUA":["Palm Beach Occidental Grand Aruba Hotel"],"CUR":["Willemstad Curacao International Airport","Willemstad Sunscape Curacao Resort"],"MBJ":["Sangster International Airport","Montego Bay Delivery to Round Hill Hotel","Montego Bay Downtown","Montego Bay Queens Drive","Montego Bay Railway Station"],"NAS":["Nassau Airport","Nassau Downtown","Nassau Paradise Island","Nassau Cruize terminal"],"SJU":["San Juan Airport","San Juan Airport","San Juan Downtown","San Juan Downtown","San Juan del Sur Downtown"],"SDQ":["La Isabela Airport","Las Americas Airport","Santo Domingo Downtown","Santo Domingo Ave Independencia","Santo Domingo San Isidro"],"SSA":["Salvador Airport","San Salvador Airport","Gobernador Horacio Guzman International Jujuy Airport","San Salvador Downtown","Jujuy downtown"],"SAO":["Sao Paulo Airport Congonhas","Sao Paulo Airport Guarulhos","Sao Paulo Downtown","Sao Paulo Guarulhos Downtown","Sao Paulo Centro Empresarial"],"MCZ":["Maceio Airport","Maceio Downtown"],"CJC":["Calama Airport","Calama Downtown","Calama Hotel"],"PUQ":["Punta Arenas Airport","Punta Arenas Downtown"],"BZE":[],"RTB":["Roatan Airport"],"SAL":["San Salvador Airport","Gobernador Horacio Guzman International Jujuy Airport","San Salvador Downtown","Jujuy downtown","San Salvador Hilton Princess Hotel"],"LAX":["Los Angeles Airport","Los Angeles Downtown","Los Angeles Downtown","Los Angeles Central LA","Los Angeles Alhambra"],"LAS":["Las Vegas Airport","Las Vegas Downtown","Las Vegas Treasure Island","Las Vegas Gold Coast Hotel","Las Vegas Sun Coast Hotel"],"SFO":["San Francisco Airport","San Francisco Downtown","San Francisco de Macoris Downtown","San Francisco Convention Center","San Francisco Resort"],"CHI":["Chicago Midway Airport","Chicago O Hare Airport","Chicago Downtown","Chicago Bucktown","Chicago Archer Heights"],"WAS":["Washington Reagan Airport","Washington Dulles International Airport","Washington DC Downtown","Washington Downtown","Port Washington Downtown"],"BOS":["Boston Airport","Boston Downtown","Boston Downtown","South Boston Downtown","Boston Hotel Resort"],"HNL":["Honolulu Airport","Honolulu Downtown","Honolulu Pacific Beach","Honolulu Resort","Honolulu Waikiki Beach"],"YTO":["Toronto Airport","Toronto Billy Bishop City Airport","Toronto Downtown","Toronto Danforth","Toronto Union Railway Station"],"YVR":["Vancouver International Airport","Vancouver Downtown","Vancouver Cruise Port","Vancouver Sandman Hotel","Vancouver North"],"YMQ":["Montreal Airport","Montreal Downtown","Montreal Downtown North","Montreal Downtown Berri","Montreal Ville Marie"],"LON":["East London Airport","London Airport","London City Airport","East London Downtown","London Downtown"],"EDI":["Edinburgh Airport","Edinburgh Downtown","Edinburgh Waverley","Edinburgh West","Edinburgh North"],"DUB":["Dublin Airport","Dublin Downtown","Dublin Downtown","Dublin Downtown","Dublin North"],"AMS":["Amsterdam Airport","Amsterdam Downtown","Amsterdam Amstel Business Park","Amsterdam South","Hoofddorp near Amsterdam Airport"],"BRU":["Brussels International Airport","Brussels Charleroi Airport","Brussels Downtown","Brussels Forest","Brussels Gosselies"],"BER":["Berlin Schoenefeld Airport","Berlin Brandenburg Airport","Berlin Tegel Airport","Bernau Downtown","Berlin Friedrichshain Downtown"],"MUC":["Munich International Airport","Munich Downtown","Munich BMW Solln","Munich East","Munich Messestadt Riem"],"ZRH":["Zurich Airport","Zurich Downtown","Zurich Badenerstrasse","Zurich Lindenstrasse","Zurich Nord"],"VIE":["Vienna International Airport","Vienna Downtown","Vienna Downtown","Vienna South","Vienna Voesendorf"],"PRG":["Prague Airport","Prague Downtown","Prague Railway Station","Prague Hotels Delivery","Prague Vestec"],"BUD":["Budapest Airport","Budapest Downtown","Budapest Vecses","Budapest Prielle Street","Budapest South"],"KRK":["Krakow Airport","Krakow Downtown","Krakow Downtown Qubus Hotel","Krakow Railway Station","Krakow  Bronowice"],"VCE":["Venice Airport","Venice Downtown","Mestre Downtown","Venice Downtown","Venice Mestre Train Station"],"FLR":["Florence Airport","Florence Airport","Florence Downtown","Florence Downtown","Florence Downtown"],"MIL":["Milan Airport Malpensa","Milan Linate Airport","Milan Bergamo Airport","Milan Downtown","Milan Piazza Diaz"],"NAP":["Naples Airport","Naples Downtown","Naples North","Naples near Airport","Naples Bonita Springs"],"NCE":["Nice International Airport","Venice Airport","Nice Downtown","Venice Downtown","Mestre Downtown"],"OPO":["Porto Alegre Airport","Pemba Airport","Porto Airport","Livorno Porto Downtown","Porto San Giorgio Downtown"],"SVQ":["Seville Airport","Seville Downtown","Louiseville Downtown","Roseville Downtown","Assevillers Downtown"],"PMI":["Palma De Mallorca Airport","Palma De Mallorca Downtown"],"IBZ":["Ibiza Airport","Ibiza Downtown","Ibiza Port","Ibiza San Antonio","Ibiza San Miguel"],"ATH":["Athens Airport","Athens Airport","Athens Downtown","Athens Kifissia Downtown","Athens Downtown"],"JTR":["Santorini Airport","Santorini Downtown","Santorini Port","Santorini Fira","Santorini Hotel delivery within city limits"],"IST":["Istanbul Sabiha Gokcen Airport","Istanbul New Grand Airport","Istanbul Downtown","Istanbul Sabiha Gokcen Downtown","Istanbul Etiler"],"DBV":["Dubrovnik Airport","Dubrovnik Downtown","Dubrovnik Marina","Dubrovnik Port","Dubrovnik Hotels Delivery"],"MLA":["Valleta Downtown","Harbour Port Valletta"],"CPH":["Copenhagen Airport","Copenhagen Downtown","Copenhagen Amager","Copenhagen Crowne Plaza Hotel","Copenhagen Cruise Port"],"STO":["Stockholm Arlanda Airport","Stockholm Bromma Airport","Stockholm Downtown","Stockholm Haninge","Stockholm Railway Station"],"OSL":["Oslo Gardermoen Airport","Oslo Downtown","Moscow Novoslobodskaya","Oslo East","Oslo Ensjoveien"],"REK":["Reykjavik  Domestic Airport","Reykjavik International Airport","Reykjavik Downtown","Reykjavik Hotel Delivery","Reykjavik East"],"RVN":["Rovaniemi Airport","Rovaniemi Downtown","Rovaniemi Railway Station","Rovaniemi Hotel Santa Claus","Rovaniemi South"],"SEL":["Gimpo International Airport","Incheon International Airport","Seoul Downtown","Seoul Guro","Seoul Kangdong"],"OSA":["Osaka Airport Kansai","Osaka Domestic Airport","Osaka Downtown","Osaka Railway Station","Osaka Higashi Osaka Nagata"],"BJS":["Beijing Airport","Beijing Delivery","Beijing Chaoyang Park","Beijing Guo Yuan","Beijing Guomao"],"SHA":["Shanghai Hongqiao International Airport Terminal 2","Shanghai Pudong Airport","Shanghai 250 Xinhua Road","Shanghai 950 Pinglu Road","Shanghai Jingqiao Plaza"],"HKG":[],"TPE":["Songshan Airport","Taoyan Airport","Taipei Downtown","Keelung Harbor"],"SIN":["Singapore Changi Airport","Singapore Downtown","Singapore Cruise Centre","Singapore International Business Park","Singapore Alexandra Road"],"KUL":["Kuala Lumpur Airport","Kuala Lumpur Downtown","Kuala Lumpur Hotel delivery","Kuala Lumpur Shopping Centre 1 Utama","Kuala Lumpur Train Station"],"DPS":["Balikesir Airport","Bali Airport","Balikesir Downtown","Bali Denpasar Downtown","Bali Downtown"],"HKT":["Phuket International Airport","Phuket Downtown","Phuket Patong","Phuket Patong Ramaburin Resort"],"HAN":["Hanoi International Airport","Hanoi Downtown"],"SGN":["Ho Chi Minh City Airport","Ho Chi Minh Downtown","Ho Chi Minh Tan Phu"],"REP":["Siem Reap Airport"],"PPS":[],"MLE":["Malelane Airport","Cairo Zamalek","Paris Boulevard Malesherbes","San Jose del Cabo Paseo Malecon"],"DEL":["New Delhi Airport","New Delhi Downtown","New Delhi Hotel Qutub","New Delhi Mehipalpur","New Delhi Transfer"],"KTM":["Kathmandu Airport","Kathmandu Durbar Marg","Kathmandu Sinamangal"],"CMB":["Colombo Airport","Colombo Downtown","Colombo Hotel Hilton","Colombo Hotel Ceylon Continental","Colombo South east"],"AUH":["Abu Dhabi Airport","Abu Dhabi Airport road","Abu Dhabi Downtown","Abu Dhabi National Exhibition Centre","Abu Dhabi Crown Plaza Hotel"],"DOH":["Doha Airport","Doha Downtown","Doha Al Khor Branch","Doha Grand Hamad Avenue Branch","Doha Raslaffan Branch"],"AMM":["Amman Airport Marka","Amman International Airport Queen Alia","Amman Airport Road Al Quds","Amman Downtown","Amman Downtown King Hussein Bridge"],"CAI":["Cairo International Airport","Cairo Downtown","Cairo St. Agouza","Cairo Le Meridein Heliopolis Hotel","Cairo Maadi"],"RAK":["Marrakech Airport","Marrakech Downtown","Marrakech Hotel Sofitel","Marrakech Club Med La Palmeraie","Marrakech Railway Station"],"CPT":["Cape Town International Airport","Cape Town Downtown","Cape Town Parow Downtown","Cape Town Rondebosch Downtown","Cape Town Stellenbosh Downtown"],"NBO":["Nairobi Airport","Nairobi Downtown","Nairobi Mombasa Rd","Nairobi Airport Wilson"],"ZNZ":["Zanzibar Airport","Zanzibar Downtown","Zanzibar Port","Zanzibar Stone Town Area","Zanzibar North"],"MRU":["Mauritius Airport","Anse la Raie Marina Paladien","Balaclava Hotel Maritim","Bel Ombre Movenpick Hotel","Belle Mare Hotel Amber"],"SEZ":["Mahebourg Downtown","Seychelles Mahe Port Victoria","Blue Bay Mahebourg","Seychelles Mahe","Mahebourg Hotel Le Preskil Beach Resort"],"SYD":["Sydney International Airport","Sydney Airport","Sydney Downtown","Sydney Downtown","Sydney East"],"MEL":["Melbourne Airport","Melbourne Airport","Melbourne Downtown","South Melbourne Downtown","Melbourne North"],"ZQN":["Queenstown Airport","Queenstown Downtown","Queenstown Downtown"],"NAN":["Nadi Airport","Nadi Downtown","Ras Al Khaimah Al Nadiyah","Nadi Gateway Hotel","Nadi Golf Terraces Hotel"],"PPT":[]});
+const enc = encodeURIComponent;
+const lindo = t => t.replace(/ Airport/g," · Aeropuerto").replace(/Airport /g,"Aeropuerto ").replace(/ Downtown/g," · Centro").replace(/Downtown/g,"Centro").replace(/ Railway Station/g," · Estación de tren").replace(/Hotel delivery|Delivery to Hotel/g,"Entrega en tu hotel");
+function srcServicio(id, iata, punto, entrega){
+  if (id === "vuelos") return WIDGETS.vuelos + (iata ? `&origin=BUE&destination=${VUELO[iata]}` : "");
+  if (id === "autos") return WIDGETS.autos + (punto ? `&default_pick_up_location=${enc(punto)}&default_drop_off_location=${enc(entrega || punto)}` : "");
+  if (id === "traslados") return iata ? WIDGETS.traslados.replace("from=&", `from=${enc(CIUDAD_EN[iata])}&`) : WIDGETS.traslados;
+  if (id === "esim") return WIDGETS.esim + (iata ? `&country=${enc(PAIS_EN[iata])}` : "");
+  if (id === "excursiones") return iata && KLOOK[iata] ? WIDGETS.tours(KLOOK[iata]) : null;
+}
+function pintarBloque(b){
+  const iata = b.dataset.iata || "", id = b.dataset.svc || "vuelos";
+  const d = DESTINOS.find(x => x.iata === iata);
+  const lista = CONFIG.servicios.filter(x => !(b.dataset.notours && x.id === "excursiones"));
+  const s = CONFIG.servicios.find(x => x.id === id);
+  let extra = "";
+  let punto = b.dataset.punto || "", entrega = b.dataset.entrega || "";
+  if (id === "autos" && d){
+    const pts = AUTOS[iata] || [];
+    if (pts.length){
+      if (!pts.includes(punto)) punto = pts[0];
+      if (!pts.includes(entrega)) entrega = punto;
+      extra = `<span class="label">¿Dónde retirás el auto en ${d.ciudad}?</span><div class="opciones">` +
+        pts.map(p => `<button type="button" class="opcion" data-punto="${p}" aria-pressed="${p===punto}">${lindo(p)}</button>`).join("") + `</div>` +
+        `<span class="label">¿Dónde lo devolvés?</span><div class="opciones">` +
+        pts.map(p => `<button type="button" class="opcion" data-entrega="${p}" aria-pressed="${p===entrega}">${lindo(p)}</button>`).join("") + `</div>`;
+    }
+  }
+  if (id === "traslados" && d) extra = `<p class="svc-intro">Tocá el trayecto que necesitás en ${d.ciudad} y mirá el precio:</p>`;
+  let src = srcServicio(id, iata, punto, entrega);
+  if (!d){ src = null; extra = `<p class="svc-intro">👆 Tocá un destino arriba y te mostramos ${s.titulo.toLowerCase()} con todo ya cargado.</p>`; }
+  if (id === "excursiones" && !src && d) extra = `<p class="svc-intro">${d ? "Muy pronto vas a poder reservar excursiones en " + d.ciudad + "." : "Elegí un destino arriba para ver sus excursiones con fotos y precios."}</p>`;
+  b.innerHTML = `<div class="pills regions svc-tabs">${lista.map(x =>
+      `<button type="button" class="pill" data-svc="${x.id}" aria-selected="${x.id===id}">${svcIcon(x.id)} ${x.titulo}</button>`).join("")}</div>
+    ${extra}<div class="widget-box"${src ? "" : " hidden"}></div>
+    <p class="svc-alt">Con ${s.marca} · <a ${linkSocio(s)}>abrir el sitio</a></p>`;
+  if (src) cargarWidget(b.querySelector(".widget-box"), src);
+}
+let svcDest = "";
+function pintarDestChips(){
+  $("#svc-dest").innerHTML = DESTINOS.map(d => `<button type="button" class="dchip" data-sdest="${d.iata}" aria-pressed="${svcDest===d.iata}"><img src="${foto(d,120)}" alt="" loading="lazy">${d.ciudad}</button>`).join("");
+}
+pintarDestChips(); pintarBloque($("#svc-main"));
+
+const serviciosViaje = (ciudad, iata) => `
+  <div class="svc-row"><span class="label">Vuelos, autos, traslados e internet para ${esc(ciudad)}</span>
+    <div class="svc-block" data-iata="${iata||""}" data-svc="vuelos" data-notours="1"></div>
+  </div>`;
+const toursViaje = d => KLOOK[d.iata]
+  ? `<div class="svc-row"><span class="label">Excursiones y entradas en ${d.ciudad}</span><div class="widget-box" id="trip-tours"></div></div>`
+  : `<div class="svc-row"><span class="label">Excursiones en ${d.ciudad}</span><p style="margin:0;color:var(--muted);font-size:14px">Muy pronto vas a poder reservarlas acá.</p></div>`;
+
+// Enlaces generales de WhatsApp
+document.querySelectorAll("[data-wa]").forEach(a => {
+  a.href = waLink("¡Hola Conector! Tengo una consulta sobre alojamiento.");
+  a.target = "_blank"; a.rel = "noopener";
+});
+
+// Filtros por región
+const REGIONES = ["Todos", ...Object.keys(REGION)];
+const regionPills = (sel, activa) => REGIONES.map(r => {
+  const n = r === "Todos" ? DESTINOS.length : REGION[r].length;
+  return `<button class="pill" role="tab" data-r="${r}" aria-selected="${r===activa}">${r} <span class="n">${n}</span></button>`;
+}).join("");
+let regionDest = "Todos", regionGuia = "Latinoamérica";
+const enRegion = (d, r) => r === "Todos" || d.region === r;
+
+// Postales
+function pintarPostales(){
+  $("#regions").innerHTML = regionPills("#regions", regionDest);
+  const todos = DESTINOS.filter(d => enRegion(d, regionDest));
+  $("#tags").innerHTML = todos.slice(0, verCuantos).map(d => `
+  <button class="tag" data-c="${d.ciudad}" aria-label="Planear viaje a ${d.ciudad}">
+    <div class="art">${art(d)}<span class="iata">${d.iata}</span><span class="kind">${d.kind}</span></div>
+    <div class="tag-body">
+      <span class="city">${d.ciudad}</span>
+      <span class="meta"><span>${d.pais}</span><span>Mejor época: <b>${d.epoca}</b></span></span>
+    </div>
+  </button>`).join("");
+  $("#ver-mas").hidden = todos.length <= verCuantos;
+  $("#ver-mas").textContent = `Ver más destinos (${todos.length - verCuantos})`;
+}
+let verCuantos = 16;
+pintarPostales();
+// Menú de destinos para tocar
+const menu = document.createElement("div"); menu.className = "dest-menu"; menu.hidden = true;
+$(".pass").appendChild(menu);
+function pintarMenu(filtro=""){
+  const f = norm(filtro);
+  const lista = DESTINOS.filter(d => !f || norm(d.ciudad).includes(f) || norm(d.pais).includes(f));
+  menu.innerHTML = `<div class="dm-head"><b>¿A dónde vas?</b><button type="button" class="dm-close" aria-label="Cerrar">✕</button></div><button type="button" class="dm-item dm-any" data-pick=""><span class="dm-ico">✦</span><span><b>No sé a dónde ir</b><small>Mostrame ideas para mis fechas</small></span></button>` +
+    Object.keys(REGION).map(r => {
+      const ds = lista.filter(d => d.region === r); if (!ds.length) return "";
+      return `<div class="dm-reg">${r}</div><div class="dm-grid">` + ds.map(d =>
+        `<button type="button" class="dm-item" data-pick="${d.ciudad}"><img src="${foto(d,160)}" alt="" loading="lazy"><span><b>${d.ciudad}</b><small>${d.pais}</small></span></button>`).join("") + `</div>`;
+    }).join("");
+}
+const fondo = document.createElement("div"); fondo.className = "dm-fondo"; fondo.hidden = true; document.body.appendChild(fondo);
+const cerrarMenu = () => { menu.hidden = true; fondo.hidden = true; document.body.classList.remove("dm-abierto"); };
+const abrirMenu = () => { pintarMenu(""); menu.hidden = false; if (window.innerWidth <= 760){ fondo.hidden = false; document.body.classList.add("dm-abierto"); } $("#destino").blur(); };
+fondo.addEventListener("click", cerrarMenu);
+$("#destino").addEventListener("focus", abrirMenu);
+$("#destino").addEventListener("click", abrirMenu);
+menu.addEventListener("mousedown", e => e.preventDefault());
+menu.addEventListener("click", e => {
+  if (e.target.closest(".dm-close")){ cerrarMenu(); return; }
+  const it = e.target.closest("[data-pick]"); if (!it) return;
+  $("#destino").value = it.dataset.pick; cerrarMenu();
+  const d = it.dataset.pick && buscarDestino(it.dataset.pick); setCode(d ? d.iata : "???");
+  if (window.fp) window.fp.open();
+});
+document.addEventListener("click", e => { if (!e.target.closest(".dest-menu") && e.target.id !== "destino" && !menu.hidden && window.innerWidth > 760) cerrarMenu(); });
+
+// Guías con pestañas
+function zonasHTML(d){ return `<ul class="zones">${d.zonas.map(z => `<li><b>${z[0]}</b><span>${z[1]}</span></li>`).join("")}</ul>`; }
+function mostrarGuia(i){
+  const d = DESTINOS[i];
+  document.querySelectorAll("#pills .pill").forEach(p => p.setAttribute("aria-selected", +p.dataset.g === i));
+  $("#guide-panel").innerHTML = `<article class="trip" role="tabpanel">
+    <div class="art">${art(d)}<span class="iata">${d.iata}</span></div>
+    <div class="trip-body">
+      <h2>Dónde alojarse en ${d.ciudad}</h2>
+      <p style="margin:0;color:var(--muted)">${d.intro}</p>
+      <div class="facts"><span class="fact">${d.pais}</span><span class="fact">Mejor época: <b>${d.epoca}</b></span></div>
+      ${zonasHTML(d)}
+      <div class="actions"><button class="btn" data-c="${d.ciudad}">Planear viaje a ${d.ciudad}</button></div>
+    </div></article>`;
+}
+function pintarGuias(){
+  $("#g-regions").innerHTML = ["Latinoamérica","Norteamérica","Europa","Asia y Medio Oriente"].map(r => `<button class="pill" role="tab" data-r="${r}" aria-selected="${r===regionGuia}">${r}</button>`).join("");
+  const idx = DESTINOS.map((d,i) => i).filter(i => enRegion(DESTINOS[i], regionGuia) && DESTINOS[i].zonas.length);
+  $("#pills").innerHTML = idx.map(i => `<button class="pill" role="tab" data-g="${i}"><span class="c">${DESTINOS[i].iata}</span>${DESTINOS[i].ciudad}</button>`).join("");
+  mostrarGuia(idx[0]);
+}
+pintarGuias();
+
+// Fechas: por defecto dentro de 30 días, 4 noches; salida siempre después de entrada
+const iso = d => d.toISOString().slice(0,10);
+const hoy = new Date(); const e0 = new Date(hoy); e0.setDate(e0.getDate()+30); const s0 = new Date(e0); s0.setDate(s0.getDate()+4);
+const ent = $("#entrada"), sal = $("#salida");
+ent.value = iso(e0); sal.value = iso(s0); ent.min = iso(hoy);
+function ajustarSalida(){
+  if (!ent.value) return;
+  const min = new Date(ent.value); min.setDate(min.getDate()+1);
+  sal.min = iso(min);
+  if (!sal.value || sal.value <= ent.value) sal.value = iso(min);
+}
+ajustarSalida();
+// Un solo calendario: primero el día de entrada, después el de salida
+function mostrarFechas(){
+  const f = v => { if (!v) return ""; const [y,m,d] = v.split("-"); return `${+d} ${["","ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"][+m]}`; };
+  $("#f-entrada").value = f(ent.value); $("#f-salida").value = f(sal.value);
+}
+mostrarFechas();
+if (window.flatpickr){
+  window.fp = flatpickr($("#f-entrada"), {
+    mode: "range", locale: "es", minDate: "today", dateFormat: "Y-m-d",
+    showMonths: window.innerWidth > 760 ? 2 : 1, defaultDate: [ent.value, sal.value],
+    disableMobile: true, positionElement: $("#f-entrada"),
+    onChange(sel, _s, inst){
+      if (sel[0]) { ent.value = inst.formatDate(sel[0], "Y-m-d"); sal.value = ""; }
+      if (sel[1]) sal.value = inst.formatDate(sel[1], "Y-m-d");
+      mostrarFechas(); if (window.pintarVueloChips) pintarVueloChips();
+    },
+    onClose(sel, _s, inst){ if (sel.length === 1){ ajustarSalida(); inst.setDate([ent.value, sal.value], false); mostrarFechas(); } },
+    onReady(_d, _s, inst){ inst.calendarContainer.classList.add("cx-cal"); }
+  });
+  $("#f-salida").addEventListener("click", () => window.fp.open());
+  $("#f-entrada").value = ""; mostrarFechas();
+} else {
+  // Respaldo si el calendario no carga
+  ["f-entrada","f-salida"].forEach((id,i) => { const el = $("#"+id); el.readOnly = false; el.type = "date"; el.value = i ? sal.value : ent.value;
+    el.addEventListener("change", () => { (i ? sal : ent).value = el.value; if (!i) ajustarSalida(); }); });
+}
+
+const norm = t => t.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().trim();
+const buscarDestino = q => DESTINOS.find(d => norm(d.ciudad).includes(norm(q)) || norm(d.iata) === norm(q));
+
+function setCode(code){ $("#stub-code").textContent = "EZE → " + code; if (code !== "???") $("#ticket-to").textContent = code; }
+$("#destino").addEventListener("input", () => {
+  const q = $("#destino").value; const d = q && buscarDestino(q);
+  setCode(d ? d.iata : "???"); $("#form-error").hidden = true;
+});
+
+// Boleto animado del hero
+let ti = 0; setInterval(() => {
+  if ($("#destino").value) return;
+  ti = (ti + 1) % DESTINOS.length; $("#ticket-to").textContent = DESTINOS[ti].iata;
+}, 2600);
+
+function noches(){
+  const n = Math.round((new Date(sal.value) - new Date(ent.value)) / 864e5);
+  return isFinite(n) && n > 0 ? n : 1;
+}
+
+function enlaceAfiliado(ciudad){
+  if (!CONFIG.linkAfiliado) return null;
+  return CONFIG.linkAfiliado
+    .replace("{ciudad}", encodeURIComponent(ciudad))
+    .replace("{entrada}", ent.value).replace("{salida}", sal.value)
+    .replace("{huespedes}", $("#huespedes").value);
+}
+
+/* Meses de la "mejor época" (1 = enero) */
+const MES = {ene:1,feb:2,mar:3,abr:4,may:5,jun:6,jul:7,ago:8,sep:9,oct:10,nov:11,dic:12};
+const MES_NOMBRE = ["","enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+function mesesDe(epoca){
+  if (epoca.includes("todo el año")) return [1,2,3,4,5,6,7,8,9,10,11,12];
+  const out = [];
+  epoca.split(" y ").forEach(t => {
+    const m = t.trim().match(/^(\w+) a (\w+)$/); if (!m) return;
+    let a = MES[m[1]], b = MES[m[2]];
+    for (let i = a; ; i = i % 12 + 1){ out.push(i); if (i === b) break; }
+  });
+  return out;
+}
+DESTINOS.forEach(d => d.meses = mesesDe(d.epoca));
+const ESTILO = {
+  "Playa": ["CUN","GIG","CTG","PUJ","FLN","PDP","MIA","BCN"],
+  "Ciudad": ["MEX","SCL","JFK","MAD","BCN","FCO","CDG","LIS","HND","BKK","DXB","GIG","MCO"],
+  "Naturaleza y cultura": ["CUZ","BRC","IGR","MDZ","SLA","CTG","HND","BKK"]
+};
+NUEVOS.forEach(n => ESTILO[n.tipo === "playa" ? "Playa" : (["ciudad","europa","torre"].includes(n.tipo) ? "Ciudad" : "Naturaleza y cultura")].push(n.iata));
+let estiloIdea = "Todos";
+WIDGETS.populares = TP + "currency=usd&locale=es&from_name=buenos-aires_ba_ar&limit=8&primary_color=0B7A75&results_background_color=FFFFFF&form_background_color=FFFFFF&promo_id=4563&campaign_id=111";
+
+const postal = (d, extra="") => `
+  <button class="tag" data-c="${d.ciudad}" aria-label="Planear viaje a ${d.ciudad}">
+    <div class="art">${art(d)}<span class="iata">${d.iata}</span><span class="kind">${extra || d.kind}</span></div>
+    <div class="tag-body"><span class="city">${d.ciudad}</span>
+      <span class="meta"><span>${d.pais}</span>${KLOOK[d.iata] ? "<span><b>Excursiones online</b></span>" : ""}</span></div>
+  </button>`;
+
+function ideas(){
+  const mes = new Date(ent.value + "T12:00").getMonth() + 1 || (new Date().getMonth() + 1);
+  const fechas = `del ${fechaCorta(ent.value)} al ${fechaCorta(sal.value)}`;
+  const ok = DESTINOS.filter(d => d.meses.includes(mes) && (estiloIdea === "Todos" || ESTILO[estiloIdea].includes(d.iata)));
+  const chips = ["Todos", ...Object.keys(ESTILO)].map(e =>
+    `<button class="pill" data-estilo="${e}" aria-selected="${e===estiloIdea}">${e}</button>`).join("");
+  setCode("???");
+  $("#trip").innerHTML = `
+    <div class="sec-head"><div><span class="label">Ideas para tu viaje · ${fechas}</span>
+      <h2>Destinos ideales para viajar en ${MES_NOMBRE[mes]}</h2></div></div>
+    <div class="pills regions">${chips}</div>
+    ${ok.length ? `<div class="tags">${ok.map(d => postal(d, "Temporada ideal")).join("")}</div>`
+                : `<p class="svc-intro">No hay destinos de este estilo en temporada ideal para esas fechas. Probá con "Todos".</p>`}
+    <div class="svc-row" style="margin-top:24px"><span class="label">Vuelos baratos desde ${window.DESDE_NOMBRE || "Buenos Aires"}</span>
+      <div class="widget-box" id="ideas-vuelos"></div></div>`;
+  cargarWidget($("#ideas-vuelos"), WIDGETS.populares);
+}
+
+function buscar(){
+  const q = $("#destino").value.trim();
+  $("#form-error").hidden = true;
+  const sec = $("#resultados"); sec.hidden = false;
+  if (!q){ ideas(); abrirResultados(); return; }
+  const d = buscarDestino(q);
+  const h = $("#huespedes").value, hTxt = h === "7" ? "7+ personas" : `${h} ${h==="1"?"persona":"personas"}`;
+  const n = noches(), nTxt = `${n} ${n===1?"noche":"noches"}`;
+  const fechas = `${fechaCorta(ent.value)} → ${fechaCorta(sal.value)}`;
+  const url = enlaceAfiliado(d ? d.ciudad : q);
+  const reservar = url ? `<div class="actions"><a class="btn" href="${url}" target="_blank" rel="noopener sponsored">Ver hoteles disponibles</a></div>` : "";
+
+  if (d){
+    setCode(d.iata);
+    const temporada = d.meses.includes(new Date(ent.value + "T12:00").getMonth() + 1);
+    $("#trip").innerHTML = `<article class="trip">
+      <div class="art">${art(d)}<span class="iata">${d.iata}</span><span class="kind">${d.kind}</span></div>
+      <div class="trip-body">
+        <h2>${d.ciudad}, ${d.pais}</h2>
+        <div class="facts"><span class="fact"><b>${fechas}</b></span><span class="fact">${nTxt}</span><span class="fact">${hTxt}</span>
+          <span class="fact">${temporada ? "✓ <b>Temporada ideal</b>" : "Mejor época: <b>" + d.epoca + "</b>"}</span></div>
+        ${reservar}
+        <div class="actions"><button type="button" class="btn btn-vuelo" data-volar="${d.iata}">✈ Ver vuelos a ${d.ciudad}</button></div>
+        ${toursViaje(d)}
+        ${serviciosViaje(d.ciudad, d.iata)}
+        ${d.zonas.length ? `<details class="zonas-det"><summary>Dónde alojarte en ${d.ciudad}</summary>${zonasHTML(d)}</details>` : ""}
+      </div></article>`;
+    if (KLOOK[d.iata]) cargarWidget($("#trip-tours"), WIDGETS.tours(KLOOK[d.iata]));
+    document.querySelectorAll("#trip .svc-block").forEach(pintarBloque);
+  } else {
+    setCode("???");
+    $("#trip").innerHTML = `<article class="trip" style="grid-template-columns:1fr">
+      <div class="trip-body">
+        <h2>${esc(q)}</h2>
+        <div class="facts"><span class="fact"><b>${fechas}</b></span><span class="fact">${nTxt}</span><span class="fact">${hTxt}</span></div>
+        ${reservar}
+        ${serviciosViaje(q)}
+      </div></article>`;
+  }
+  abrirResultados();
+}
+
+// Vuelos: tocar un destino y ver resultados (sin escribir)
+const ddmm = v => { const [y,m,d] = v.split("-"); return d + m; };
+function verVuelos(iata){
+  if (!ent.value || !sal.value) ajustarSalida();
+  const pax = Math.min(+$("#huespedes").value || 1, 9);
+  const q = (window.PREF ? PREF.desde : "BUE") + ddmm(ent.value) + VUELO[iata] + ddmm(sal.value) + pax;
+  location.href = location.pathname + "?flightSearch=" + q + "#vuelos";
+}
+function pintarVueloChips(){
+  $("#vuelo-dest").innerHTML = DESTINOS.map(d => `<button type="button" class="dchip" data-volar="${d.iata}"><img src="${foto(d,120)}" alt="" loading="lazy">${d.ciudad}</button>`).join("");
+  $("#vuelo-fechas-btn").textContent = `${$("#f-entrada").value || "—"} → ${$("#f-salida").value || "—"} · cambiar`;
+}
+pintarVueloChips();
+$("#vuelo-fechas-btn").addEventListener("click", () => { $(".pass").scrollIntoView({block:"center"}); window.fp && window.fp.open(); });
+if (new URLSearchParams(location.search).get("flightSearch")) setTimeout(() => $("#vuelos").scrollIntoView({block:"start"}), 300);
+
+// Volver atrás (botón y botón "atrás" del celular)
+function abrirResultados(){
+  const r = $("#resultados");
+  r.classList.add("pantalla"); r.scrollTop = 0;
+  document.body.classList.add("con-pantalla");
+  $(".volver-flot").hidden = false;
+  if (location.hash !== "#viaje") history.pushState(null, "", "#viaje");
+}
+function cerrarResultados(){
+  const r = $("#resultados");
+  r.hidden = true; r.classList.remove("pantalla");
+  document.body.classList.remove("con-pantalla");
+  $(".volver-flot").hidden = true;
+}
+window.addEventListener("popstate", () => { if (location.hash !== "#viaje") cerrarResultados(); });
+document.addEventListener("click", ev => {
+  if (!ev.target.closest("[data-volver]")) return;
+  ev.preventDefault();
+  if (location.hash === "#viaje") history.back(); else cerrarResultados();
+});
+if (location.hash === "#viaje") history.replaceState(null, "", location.pathname);
+
+$("#buscador").addEventListener("submit", ev => { ev.preventDefault(); buscar(); });
+document.addEventListener("click", ev => {
+  const vo = ev.target.closest("button[data-volar]");
+  if (vo){ verVuelos(vo.dataset.volar); return; }
+  const es = ev.target.closest("[data-estilo]");
+  if (es){ estiloIdea = es.dataset.estilo; ideas(); return; }
+  const sv = ev.target.closest("button[data-svc]");
+  if (sv){ const b = sv.closest(".svc-block"); b.dataset.svc = sv.dataset.svc; pintarBloque(b); return; }
+  const pt = ev.target.closest("button[data-punto]");
+  if (pt){ const b = pt.closest(".svc-block"); b.dataset.punto = pt.dataset.punto; b.dataset.entrega = pt.dataset.punto; pintarBloque(b); return; }
+  const en = ev.target.closest("button[data-entrega]");
+  if (en){ const b = en.closest(".svc-block"); b.dataset.entrega = en.dataset.entrega; pintarBloque(b); return; }
+  const sd = ev.target.closest("button[data-sdest]");
+  if (sd){ svcDest = sd.dataset.sdest; pintarDestChips(); const b = $("#svc-main"); b.dataset.iata = svcDest; b.dataset.punto = ""; b.dataset.entrega = ""; pintarBloque(b); return; }
+  if (ev.target.closest("#ver-mas")){ verCuantos += 16; pintarPostales(); return; }
+  const r = ev.target.closest("[data-r]");
+  if (r){
+    if (r.closest("#g-regions")){ regionGuia = r.dataset.r; pintarGuias(); }
+    else { regionDest = r.dataset.r; verCuantos = 16; pintarPostales(); }
+    return;
+  }
+  const g = ev.target.closest("[data-g]");
+  if (g){ mostrarGuia(+g.dataset.g); return; }
+  const b = ev.target.closest("button[data-c]");
+  if (b){ $("#destino").value = b.dataset.c; buscar(); }
+});
+/* Ofertas reales (ofertas.json se actualiza solo cada pocas horas) */
+(function(){
+  const MES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+  const f = v => { const [y,m,d] = v.slice(0,10).split("-"); return `${+d} ${MES[m-1]}`; };
+  const porCodigo = {};
+  DESTINOS.forEach(d => { const k = VUELO[d.iata] || d.iata; if (!porCodigo[k] || VUELO[d.iata] === d.iata) porCodigo[k] = d; });
+  const fotoDe = o => { const d = porCodigo[o.d]; return d && FOTOS[d.iata] ? `https://images.unsplash.com/${FOTOS[d.iata]}?auto=format&fit=crop&w=700&q=75` : ""; };
+  const nombre = o => (porCodigo[o.d] && porCodigo[o.d].ciudad) || o.ciudad || o.d;
+  const hace = iso => { const h = Math.max(1, Math.round((Date.now() - Date.parse(iso)) / 36e5)); return h < 24 ? `hace ${h} h` : `hace ${Math.round(h/24)} días`; };
+  let datos = null;
+  function detalle(o, origen){
+    const ft = fotoDe(o);
+    const escalas = o.escalas === 0 ? "Directo" : o.escalas === 1 ? "1 escala" : `${o.escalas} escalas`;
+    $("#of-detalle").innerHTML = `<div class="of-big">
+      <div class="im" style="${ft ? `background-image:url('${ft}')` : ""}"></div>
+      <h2>${origen.nombre} → ${nombre(o)}</h2>
+      <div class="precio">USD ${o.precio}</div><div class="chica">Ida y vuelta, por persona · encontrado ${hace(datos.actualizado)}</div>
+      <ul><li>🛫 Ida: <b>${f(o.ida)}</b></li>${o.vuelta ? `<li>🛬 Vuelta: <b>${f(o.vuelta)}</b></li>` : ""}<li>✈️ ${escalas}${o.aerolinea ? " · " + o.aerolinea : ""}</li></ul>
+      <a class="comprar" href="${o.link}" target="_blank" rel="noopener sponsored">Ver y comprar ✈</a>
+      <p class="chica">Te llevamos a la página oficial donde se vende. El precio puede cambiar: es el último encontrado.</p>
+    </div>`;
+    $("#oferta").hidden = false; document.body.style.overflow = "hidden";
+  }
+  document.addEventListener("click", ev => {
+    const c = ev.target.closest("button[data-of]");
+    if (c && datos){ const og = datos.origenes[c.dataset.og]; const o = og.ofertas[+c.dataset.of]; detalle(o, og); history.replaceState(null, "", "?oferta=" + c.dataset.og + "-" + o.d); return; }
+    if (ev.target.closest("[data-of-cerrar]")){ $("#oferta").hidden = true; document.body.style.overflow = ""; history.replaceState(null, "", location.pathname); }
+  });
+  fetch("ofertas.json", {cache: "no-store"}).then(r => r.ok ? r.json() : null).then(j => {
+    if (!j || !j.origenes) return;
+    datos = j;
+    const pedida = (new URLSearchParams(location.search).get("oferta") || "").toUpperCase();
+    const ogCod = (pedida.split("-")[0]) || (window.PREF && PREF.desde) || "BUE";
+    const og = j.origenes[ogCod] || j.origenes.BUE || Object.values(j.origenes)[0];
+    const ogKey = Object.keys(j.origenes).find(k => j.origenes[k] === og);
+    if (!og || !og.ofertas.length) return;
+    document.querySelectorAll("#ofertas .desde-txt").forEach(e => e.textContent = og.nombre);
+    $("#of-grid").innerHTML = og.ofertas.slice(0, 12).map((o, i) => { const ft = fotoDe(o); return `<button type="button" class="of-card" data-og="${ogKey}" data-of="${i}">
+      <div class="im" style="${ft ? `background-image:url('${ft}')` : ""}"><div class="pr">USD ${o.precio}<small>ida y vuelta</small></div></div>
+      <div class="tx"><b>${nombre(o)}</b><span>${f(o.ida)}${o.vuelta ? " → " + f(o.vuelta) : ""} · ${o.escalas === 0 ? "directo" : o.escalas + " escala" + (o.escalas > 1 ? "s" : "")}</span></div></button>`; }).join("");
+    $("#of-nota").textContent = `Precios por persona en dólares, actualizados ${hace(j.actualizado)}. Pueden cambiar al comprar.`;
+    $("#ofertas").hidden = false;
+    if (pedida){
+      const dest = pedida.split("-")[1];
+      const o = og.ofertas.find(x => x.d === dest);
+      if (o) detalle(o, og);
+      else if (dest){ // la oferta ya no está: mostramos la búsqueda en vivo de esa ruta
+        const n = new Date(); n.setDate(1); n.setMonth(n.getMonth() + 1);
+        const mm = String(n.getMonth() + 1).padStart(2, "0");
+        location.replace(location.pathname + "?flightSearch=" + ogKey + "15" + mm + dest + "28" + mm + "1#vuelos");
+      }
+    }
+  }).catch(() => {});
+})();
+
+/* Botón de idioma, moneda y ciudad de salida (todo para tocar) */
+(function(){
+  const P = window.PREF; if (!P) return;
+  const IDI = [["es","🇪🇸","Español"],["en","🇺🇸","English"],["pt","🇧🇷","Português"],["fr","🇫🇷","Français"],["it","🇮🇹","Italiano"],["de","🇩🇪","Deutsch"]];
+  const MON = [["ARS","🇦🇷","Peso argentino"],["BRL","🇧🇷","Real"],["MXN","🇲🇽","Peso mexicano"],["CLP","🇨🇱","Peso chileno"],["COP","🇨🇴","Peso colombiano"],["PEN","🇵🇪","Sol"],["UYU","🇺🇾","Peso uruguayo"],["USD","🇺🇸","Dólar"],["EUR","🇪🇺","Euro"],["GBP","🇬🇧","Libra"],["CAD","🇨🇦","Dólar canadiense"]];
+  const DES = [["BUE","🇦🇷","Buenos Aires"],["COR","🇦🇷","Córdoba"],["ROS","🇦🇷","Rosario"],["MDZ","🇦🇷","Mendoza"],["SAO","🇧🇷","São Paulo"],["RIO","🇧🇷","Río de Janeiro"],["SCL","🇨🇱","Santiago"],["MVD","🇺🇾","Montevideo"],["ASU","🇵🇾","Asunción"],["LIM","🇵🇪","Lima"],["BOG","🇨🇴","Bogotá"],["MEX","🇲🇽","Ciudad de México"],["MIA","🇺🇸","Miami"],["NYC","🇺🇸","Nueva York"],["MAD","🇪🇸","Madrid"],["LON","🇬🇧","Londres"]];
+  const d0 = DES.find(d => d[0] === P.desde);
+  if (d0){ window.DESDE_NOMBRE = d0[2]; document.querySelectorAll(".desde-txt").forEach(e => e.textContent = d0[2]); }
+  const btn = document.getElementById("pref-btn");
+  btn.textContent = "🌐 " + P.lang.toUpperCase() + " · " + P.cur;
+  const sel = {lang:P.lang, cur:P.cur, desde:P.desde};
+  const ops = (g, arr) => arr.map(([v,f,n]) => `<button type="button" class="pref-op" translate="no" data-g="${g}" data-v="${v}" aria-pressed="${sel[g]===v}"><span class="f">${f}</span>${n}${g==="cur" ? ` <b>${v}</b>` : ""}</button>`).join("");
+  const panel = document.createElement("div");
+  panel.className = "pref"; panel.hidden = true;
+  panel.innerHTML = `<div class="pref-in"><button type="button" class="volver" data-cerrar>← Volver</button>
+    <h3>🌐 Idioma</h3><div class="pref-grid">${ops("lang", IDI)}</div>
+    <h3>💵 Moneda</h3><div class="pref-grid">${ops("cur", MON)}</div>
+    <h3>✈ Salgo desde</h3><div class="pref-grid">${ops("desde", DES)}</div>
+    <button type="button" class="btn pref-ok" data-ok>Listo</button>
+    <p class="pref-nota">Los precios se muestran en tu moneda. Al pagar, cada empresa te cobra en tu moneda cuando lo permite, o te muestra el cambio antes de pagar.</p></div>`;
+  document.body.appendChild(panel);
+  btn.addEventListener("click", () => { panel.hidden = false; document.body.style.overflow = "hidden"; });
+  panel.addEventListener("click", ev => {
+    const o = ev.target.closest("button[data-g]");
+    if (o){ sel[o.dataset.g] = o.dataset.v; panel.querySelectorAll(`[data-g="${o.dataset.g}"]`).forEach(b => b.setAttribute("aria-pressed", b === o)); return; }
+    if (ev.target.closest("[data-cerrar]")){ panel.hidden = true; document.body.style.overflow = ""; return; }
+    if (ev.target.closest("[data-ok]")){
+      try { localStorage.setItem("conector-pref", JSON.stringify(sel)); } catch(e){}
+      if (sel.lang === "es"){ document.cookie = "googtrans=;path=/;max-age=0"; document.cookie = "googtrans=;path=/;domain=." + location.hostname.replace(/^www\./,"") + ";max-age=0"; }
+      location.href = location.pathname;
+    }
+  });
+})();
+
+</script>
+</body>
+</html>
