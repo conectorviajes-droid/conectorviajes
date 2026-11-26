@@ -1145,16 +1145,24 @@ document.addEventListener("click", ev => {
   const nombre = o => (porCodigo[o.d] && porCodigo[o.d].ciudad) || o.ciudad || o.d;
   const hace = iso => { const h = Math.max(1, Math.round((Date.now() - Date.parse(iso)) / 36e5)); return h < 24 ? `hace ${h} h` : `hace ${Math.round(h/24)} días`; };
   let datos = null;
+  const cur = () => (window.PREF && PREF.cur) || "USD";
+  const local = usd => {
+    const c = cur(), t = datos && datos.tasas && datos.tasas[c];
+    if (c === "USD" || !t) return null;
+    try { return new Intl.NumberFormat("es-AR", {style: "currency", currency: c, maximumFractionDigits: 0}).format(Math.round(usd * t / (t > 100 ? 100 : 1)) * (t > 100 ? 100 : 1)); } catch(e){ return null; }
+  };
+  const precioGrande = o => local(o.precio) || `USD ${o.precio}`;
+  const linkCompra = o => o.link + "&currency=" + cur().toLowerCase() + "&locale=" + ((window.PREF && PREF.lang) || "es");
   function detalle(o, origen){
     const ft = fotoDe(o);
     const escalas = o.escalas === 0 ? "Directo" : o.escalas === 1 ? "1 escala" : `${o.escalas} escalas`;
     $("#of-detalle").innerHTML = `<div class="of-big">
       <div class="im" style="${ft ? `background-image:url('${ft}')` : ""}"></div>
       <h2>${origen.nombre} → ${nombre(o)}</h2>
-      <div class="precio">USD ${o.precio}</div><div class="chica">Ida y vuelta, por persona · encontrado ${hace(datos.actualizado)}</div>
+      <div class="precio">${precioGrande(o)}</div><div class="chica">Ida y vuelta, por persona${local(o.precio) ? ` · aprox. USD ${o.precio}` : ""} · encontrado ${hace(datos.actualizado)}</div>
       <ul><li>🛫 Ida: <b>${f(o.ida)}</b></li>${o.vuelta ? `<li>🛬 Vuelta: <b>${f(o.vuelta)}</b></li>` : ""}<li>✈️ ${escalas}${o.aerolinea ? " · " + o.aerolinea : ""}</li></ul>
-      <a class="comprar" href="${o.link}" target="_blank" rel="noopener sponsored">Ver y comprar ✈</a>
-      <p class="chica">Te llevamos a la página oficial donde se vende. El precio puede cambiar: es el último encontrado.</p>
+      <a class="comprar" href="${linkCompra(o)}" target="_blank" rel="noopener sponsored">Ver y comprar ✈</a>
+      <p class="chica">Te llevamos a la página oficial donde se vende, en tu moneda. El precio puede cambiar: es el último encontrado${local(o.precio) ? " y la conversión es aproximada" : ""}.</p>
     </div>`;
     $("#oferta").hidden = false; document.body.style.overflow = "hidden";
   }
@@ -1173,9 +1181,9 @@ document.addEventListener("click", ev => {
     if (!og || !og.ofertas.length) return;
     document.querySelectorAll("#ofertas .desde-txt").forEach(e => e.textContent = og.nombre);
     $("#of-grid").innerHTML = og.ofertas.slice(0, 12).map((o, i) => { const ft = fotoDe(o); return `<button type="button" class="of-card" data-og="${ogKey}" data-of="${i}">
-      <div class="im" style="${ft ? `background-image:url('${ft}')` : ""}"><div class="pr">USD ${o.precio}<small>ida y vuelta</small></div></div>
+      <div class="im" style="${ft ? `background-image:url('${ft}')` : ""}"><div class="pr">${precioGrande(o)}<small>ida y vuelta</small></div></div>
       <div class="tx"><b>${nombre(o)}</b><span>${f(o.ida)}${o.vuelta ? " → " + f(o.vuelta) : ""} · ${o.escalas === 0 ? "directo" : o.escalas + " escala" + (o.escalas > 1 ? "s" : "")}</span></div></button>`; }).join("");
-    $("#of-nota").textContent = `Precios por persona en dólares, actualizados ${hace(j.actualizado)}. Pueden cambiar al comprar.`;
+    $("#of-nota").textContent = local(100) ? `Precios por persona en ${cur()}, convertidos desde dólares y actualizados ${hace(j.actualizado)}. Al comprar ves el precio exacto.` : `Precios por persona en dólares, actualizados ${hace(j.actualizado)}. Pueden cambiar al comprar.`;
     $("#ofertas").hidden = false;
     if (pedida){
       const dest = pedida.split("-")[1];

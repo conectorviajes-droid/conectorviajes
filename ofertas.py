@@ -63,10 +63,20 @@ def buscar(origen, token):
     return get_json(url, {"X-Access-Token": token, "User-Agent": "conector-ofertas"}).get("data", [])
 
 
+def tasas():
+    """Valor del dólar en cada moneda (se actualiza una vez por día en la fuente)."""
+    try:
+        r = get_json("https://open.er-api.com/v6/latest/USD")["rates"]
+        return {k: r[k] for k in ["ARS", "BRL", "MXN", "CLP", "COP", "PEN", "UYU", "PYG", "BOB", "EUR", "GBP", "CAD"] if k in r}
+    except Exception as e:
+        log("sin tasas de cambio:", e)
+        return {}
+
+
 def armar(token):
     conocidos = destinos_de_la_pagina()
     ciudades = nombres_ciudades()
-    salida = {"actualizado": datetime.datetime.now(datetime.timezone.utc).isoformat(), "moneda": "USD", "origenes": {}}
+    salida = {"actualizado": datetime.datetime.now(datetime.timezone.utc).isoformat(), "moneda": "USD", "tasas": tasas(), "origenes": {}}
     hoy = (datetime.date.today() + datetime.timedelta(days=3)).isoformat()
     for cod, nombre in ORIGENES.items():
         try:
