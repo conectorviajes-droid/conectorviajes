@@ -1231,6 +1231,26 @@ document.addEventListener("click", ev => {
   }).catch(() => {});
 })();
 
+/* Buscador de vuelos: "negocios" -> "business" (el texto está dentro del buscador de Travelpayouts) */
+(function(){
+  const cambiar = t => t.replace(/\bnegocios?\b/g, "business").replace(/\bNegocios?\b/g, "Business");
+  const arreglar = root => {
+    const tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT); let n;
+    while ((n = tw.nextNode())) if (/negocio/i.test(n.textContent)) n.textContent = cambiar(n.textContent);
+  };
+  const vigilados = new WeakSet();
+  const vigilar = () => {
+    ["tpwl-search", "tpwl-tickets", "tpwl-modals"].forEach(id => {
+      const h = document.getElementById(id);
+      if (!h || !h.shadowRoot || vigilados.has(h.shadowRoot)) return;
+      vigilados.add(h.shadowRoot);
+      arreglar(h.shadowRoot);
+      new MutationObserver(() => arreglar(h.shadowRoot)).observe(h.shadowRoot, {subtree: true, childList: true, characterData: true});
+    });
+  };
+  const t = setInterval(vigilar, 800); setTimeout(() => clearInterval(t), 60000);
+})();
+
 /* Botón de idioma, moneda y ciudad de salida (todo para tocar) */
 (function(){
   const P = window.PREF; if (!P) return;
