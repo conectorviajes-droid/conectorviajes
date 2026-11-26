@@ -460,7 +460,7 @@ document.head.appendChild(script);
 
 <div class="wrap">
   <header>
-    <a class="brand notranslate" translate="no" href="#" data-volver>
+    <a class="brand notranslate" translate="no" href="/" data-inicio aria-label="Conector, página principal">
       <svg width="40" height="24" viewBox="0 0 40 24" aria-hidden="true"><defs><linearGradient id="lg-h" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--sun)"/></linearGradient></defs><path d="M20 12C16.5 6.5 13 4.5 9.5 4.5A7.5 7.5 0 0 0 9.5 19.5C13 19.5 16.5 17.5 20 12C23.5 6.5 27 4.5 30.5 4.5A7.5 7.5 0 0 1 30.5 19.5C27 19.5 23.5 17.5 20 12Z" fill="none" stroke="url(#lg-h)" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Conector
     </a>
@@ -578,7 +578,7 @@ document.head.appendChild(script);
 
   <footer>
     <div>
-      <a class="brand" href="#" style="font-size:18px;margin-bottom:10px"><svg width="34" height="20" viewBox="0 0 40 24" aria-hidden="true"><defs><linearGradient id="lg-f" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--sun)"/></linearGradient></defs><path d="M20 12C16.5 6.5 13 4.5 9.5 4.5A7.5 7.5 0 0 0 9.5 19.5C13 19.5 16.5 17.5 20 12C23.5 6.5 27 4.5 30.5 4.5A7.5 7.5 0 0 1 30.5 19.5C27 19.5 23.5 17.5 20 12Z" fill="none" stroke="url(#lg-f)" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Conector</a>
+      <a class="brand" href="/" data-inicio style="font-size:18px;margin-bottom:10px"><svg width="34" height="20" viewBox="0 0 40 24" aria-hidden="true"><defs><linearGradient id="lg-f" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--sun)"/></linearGradient></defs><path d="M20 12C16.5 6.5 13 4.5 9.5 4.5A7.5 7.5 0 0 0 9.5 19.5C13 19.5 16.5 17.5 20 12C23.5 6.5 27 4.5 30.5 4.5A7.5 7.5 0 0 1 30.5 19.5C27 19.5 23.5 17.5 20 12Z" fill="none" stroke="url(#lg-f)" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Conector</a>
       <p>Conector te ayuda a planear tu viaje por Latinoamérica y el mundo: vuelos, autos, traslados, excursiones y guías de alojamiento. Cuando reservás a través de nuestros enlaces, la plataforma de reservas puede pagarnos una comisión, sin costo extra para vos.</p>
       <p>© 2026 Conector · Fotos: Unsplash</p>
     </div>
@@ -1120,6 +1120,18 @@ document.addEventListener("click", ev => {
   if (location.hash === "#viaje") history.back(); else cerrarResultados();
 });
 if (location.hash === "#viaje") history.replaceState(null, "", location.pathname);
+/* Logo: siempre vuelve a la página principal, arriba de todo y limpia */
+document.addEventListener("click", ev => {
+  if (!ev.target.closest("[data-inicio]")) return;
+  ev.preventDefault();
+  if (location.search){ location.href = location.pathname; return; }
+  if (!$("#resultados").hidden) cerrarResultados();
+  const of = $("#oferta"); if (of && !of.hidden){ of.hidden = true; }
+  const pf = document.querySelector(".pref"); if (pf && !pf.hidden) pf.hidden = true;
+  document.body.style.overflow = "";
+  history.replaceState(null, "", location.pathname);
+  window.scrollTo({top: 0, behavior: "smooth"});
+});
 
 $("#buscador").addEventListener("submit", ev => { ev.preventDefault(); buscar(); });
 document.addEventListener("click", ev => {
