@@ -7,13 +7,8 @@ WEB = os.path.join(AQUI, "conector-web")
 MARKER = "809229"
 SITIO = "85f3691a-23eb-4f62-9d45-1b712afb16aa"
 
-# Ciudades de salida (las mismas del botón 🌐 de la página)
-ORIGENES = {
-    "BUE": "Buenos Aires", "COR": "Córdoba", "ROS": "Rosario", "MDZ": "Mendoza",
-    "SAO": "São Paulo", "RIO": "Río de Janeiro", "SCL": "Santiago", "MVD": "Montevideo",
-    "ASU": "Asunción", "LIM": "Lima", "BOG": "Bogotá", "MEX": "Ciudad de México",
-    "MIA": "Miami", "NYC": "Nueva York", "MAD": "Madrid", "LON": "Londres",
-}
+# Ciudades de salida del mundo (las arma generar_mapas.py en origenes.json)
+ORIGENES = json.load(open(os.path.join(AQUI, "origenes.json"), encoding="utf-8"))
 
 
 def log(*a):
@@ -57,7 +52,7 @@ def nombres_ciudades():
 def buscar(origen, token):
     q = urllib.parse.urlencode({
         "origin": origen, "currency": "usd", "one_way": "false", "unique": "true",
-        "sorting": "price", "limit": 60, "page": 1, "market": "ar",
+        "sorting": "price", "limit": 60, "page": 1, "market": ORIGENES[origen]["p"].lower(),
     })
     url = "https://api.travelpayouts.com/aviasales/v3/prices_for_dates?" + q
     return get_json(url, {"X-Access-Token": token, "User-Agent": "conector-ofertas"}).get("data", [])
@@ -67,7 +62,7 @@ def tasas():
     """Valor del dólar en cada moneda (se actualiza una vez por día en la fuente)."""
     try:
         r = get_json("https://open.er-api.com/v6/latest/USD")["rates"]
-        return {k: r[k] for k in ["ARS", "BRL", "MXN", "CLP", "COP", "PEN", "UYU", "PYG", "BOB", "EUR", "GBP", "CAD"] if k in r}
+        return {k: round(v, 6) for k, v in r.items()}
     except Exception as e:
         log("sin tasas de cambio:", e)
         return {}
@@ -78,7 +73,10 @@ def armar(token):
     ciudades = nombres_ciudades()
     salida = {"actualizado": datetime.datetime.now(datetime.timezone.utc).isoformat(), "moneda": "USD", "tasas": tasas(), "origenes": {}}
     hoy = (datetime.date.today() + datetime.timedelta(days=3)).isoformat()
-    for cod, nombre in ORIGENES.items():
+    import time
+    for cod, info in ORIGENES.items():
+        nombre = info["n"]
+        time.sleep(0.3)
         try:
             filas = buscar(cod, token)
         except Exception as e:
@@ -116,8 +114,15 @@ def armar(token):
 if __name__ == "__main__":
     datos = armar(os.environ["TRAVELPAYOUTS_TOKEN"])
     if not datos["origenes"]:
-        log("no llegaron ofertas; se deja el archivo anterior")
+        log("no llegaron ofertas; se dejan los archivos anteriores")
         sys.exit(0)
-    with open(os.path.join(AQUI, "ofertas.json"), "w", encoding="utf-8") as f:
-        json.dump(datos, f, ensure_ascii=False, separators=(",", ":"))
-    log("ofertas.json actualizado")
+    carpeta = os.path.join(AQUI, "ofertas")
+    os.makedirs(carpeta, exist_ok=True)
+    for cod, og in datos["origenes"].items():
+        with open(os.path.join(carpeta, cod + ".json"), "w", encoding="utf-8") as f:
+            json.dump(og, f, ensure_ascii=False, separators=(",", ":"))
+    indice = {"actualizado": datos["actualizado"], "moneda": "USD", "tasas": datos["tasas"],
+              "origenes": {c: og["nombre"] for c, og in datos["origenes"].items()}}
+    with open(os.path.join(carpeta, "index.json"), "w", encoding="utf-8") as f:
+        json.dump(indice, f, ensure_ascii=False, separators=(",", ":"))
+    log("ofertas actualizadas:", len(datos["origenes"]), "ciudades")
