@@ -624,7 +624,8 @@ function ajustarIdioma(src){
   const P = window.PREF || {lang:"es", cur:"USD", desde:"BUE"};
   if (!/promo_id=4497/.test(src)) src = src.replace(/([?&]locale=)[a-z]+/, "$1" + (P.idiomaWidgets || "en"));
   let cur = P.cur.toLowerCase();
-  if (/promo_id=(2949|4497)/.test(src) || /wtype=true/.test(src)) cur = ["EUR","GBP"].includes(P.cur) ? P.cur : "USD";
+  if (/promo_id=2949/.test(src) || /wtype=true/.test(src)) cur = ["EUR","GBP"].includes(P.cur) ? P.cur : "USD";
+  if (/promo_id=4497/.test(src)) cur = ["USD","EUR","GBP","JPY","AUD","NZD","CAD","CHF","HKD","SGD","KRW","TWD","THB","MYR","PHP","IDR","VND","INR","CNY","AED"].includes(P.cur) ? P.cur : "USD";
   src = src.replace(/([?&]currency=)[A-Za-z]+/, "$1" + cur);
   return src.replace(/([?&]origin=)BUE\b/, "$1" + P.desde);
 }
@@ -1163,7 +1164,10 @@ document.addEventListener("click", ev => {
     try { return new Intl.NumberFormat("es-AR", {style: "currency", currency: c, maximumFractionDigits: 0}).format(Math.round(usd * t / (t > 100 ? 100 : 1)) * (t > 100 ? 100 : 1)); } catch(e){ return null; }
   };
   const precioGrande = o => local(o.precio) || `USD ${o.precio}`;
-  const linkCompra = o => o.link + "&currency=" + cur().toLowerCase() + "&locale=" + ((window.PREF && PREF.idiomaWidgets) || "es");
+  /* Comprar: abre los pasajes reales en el buscador de Conector (muestra la moneda local, también pesos);
+     de ahí la persona elige el pasaje y pasa a la agencia que lo vende */
+  const dm = v => v ? v.slice(8,10) + v.slice(5,7) : "";
+  const linkCompra = (o, og) => location.pathname + "?flightSearch=" + og + dm(o.ida) + o.d + dm(o.vuelta) + "1#vuelos";
   function detalle(o, origen){
     const ft = fotoDe(o);
     const escalas = o.escalas === 0 ? "Sin escalas" : o.escalas === 1 ? "1 escala" : `${o.escalas} escalas`;
@@ -1172,8 +1176,8 @@ document.addEventListener("click", ev => {
       <h2>${origen.nombre} → ${nombre(o)}</h2>
       <div class="precio">${precioGrande(o)}</div><div class="chica">Ida y vuelta, por persona${local(o.precio) ? ` · aprox. USD ${o.precio}` : ""} · encontrado ${hace(datos.actualizado)}</div>
       <ul><li>🛫 Ida: <b>${f(o.ida)}</b></li>${o.vuelta ? `<li>🛬 Vuelta: <b>${f(o.vuelta)}</b></li>` : ""}<li>✈️ ${escalas}${o.aerolinea ? " · " + o.aerolinea : ""}</li></ul>
-      <a class="comprar" href="${linkCompra(o)}" target="_blank" rel="noopener sponsored">Ver y comprar ✈</a>
-      <p class="chica">Te llevamos a la página oficial donde se vende, en tu moneda. El precio puede cambiar: es el último encontrado${local(o.precio) ? " y la conversión es aproximada" : ""}.</p>
+      <a class="comprar" href="${linkCompra(o, origen.codigo)}">Ver pasajes y comprar ✈</a>
+      <p class="chica">Te mostramos los pasajes de esas fechas en tu moneda y elegís dónde comprarlo. El precio puede cambiar: es el último encontrado${local(o.precio) ? " y la conversión es aproximada" : ""}.</p>
     </div>`;
     $("#oferta").hidden = false; document.body.style.overflow = "hidden";
   }
@@ -1194,6 +1198,7 @@ document.addEventListener("click", ev => {
     datos = j;
     const ogKey = Object.keys(j.origenes)[0];
     const og = j.origenes[ogKey];
+    og.codigo = ogKey;
     if (!og || !og.ofertas.length) return;
     document.querySelectorAll("#ofertas .desde-txt").forEach(e => e.textContent = og.nombre);
     $("#of-grid").innerHTML = og.ofertas.slice(0, 12).map((o, i) => { const ft = fotoDe(o); return `<button type="button" class="of-card" data-og="${ogKey}" data-of="${i}">
