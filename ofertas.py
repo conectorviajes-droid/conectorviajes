@@ -126,3 +126,5 @@ if __name__ == "__main__":
     with open(os.path.join(carpeta, "index.json"), "w", encoding="utf-8") as f:
         json.dump(indice, f, ensure_ascii=False, separators=(",", ":"))
     log("ofertas actualizadas:", len(datos["origenes"]), "ciudades")
+    import paginas  # páginas "Vuelos baratos desde X" + sitemap.xml
+    paginas.main()
