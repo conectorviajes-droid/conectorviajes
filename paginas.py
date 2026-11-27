@@ -69,7 +69,7 @@ def pagina(cod, nombre, ofertas, todas, actualizado):
     ld = {"@context": "https://schema.org", "@type": "ItemList", "name": f"Vuelos baratos desde {nombre}",
           "itemListElement": [{"@type": "ListItem", "position": i + 1, "name": f'{nombre} a {o["ciudad"]} desde USD {o["precio"]}'}
                               for i, o in enumerate(ofertas)]}
-    act = actualizado[:10]
+    act = f"{actualizado[8:10]}/{actualizado[5:7]}/{actualizado[:4]}"
     return f"""<!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{e(titulo)}</title><meta name="description" content="{e(desc)}"><link rel="canonical" href="{url}">
